@@ -1,9 +1,11 @@
 # Package importation
 import os 
 
-os.chdir("/Users/antoineluciano/Documents/Recherche/permABC_new/permABC")
+os.chdir("..")
+os.chdir("..")
 import sys
 sys.path.append(os.getcwd())
+sys.stdout.reconfigure(line_buffering=True)
 
 # from vanilla import abc_vanilla, perm_abc_vanilla
 from smc import abc_smc, perm_abc_smc
@@ -19,6 +21,17 @@ from scipy.stats import invgamma
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd 
+print("Importation done", flush = True)
+
+if len(sys.argv) > 1:
+    seed = int(sys.argv[1])
+else: 
+    seed = 0
+
+N_iterations = 1000
+n_blocks_dep = 3
+n_blocks_reg = 2
+Final_iteration = 100
 def fit_data(mod, gen, y_obs, thetas, names, size = 100):
     K = y_obs.shape[0]
 
@@ -33,6 +46,7 @@ def fit_data(mod, gen, y_obs, thetas, names, size = 100):
         plt.show()
 # Data importation
 ## Population and name
+print("Importing data...")
 df_pop = pd.read_csv("./datas/donnees_departements.csv", sep = ";")
 
 dep_pop = {df_pop.loc[i]["CODDEP"]:df_pop.loc[i]["PTOT"] for i in range(df_pop.shape[0])}
@@ -67,9 +81,6 @@ date = date[6:]
 K_dep = I_obs_dep.shape[0]
 I_obs_dep.shape
 
-
-
-plt.show()
 ## Data by region
 df_reg = df_dep.groupby(['jour', 'reg']).sum().reset_index()
 reg_list = np.unique(df_reg["reg"])
@@ -106,13 +117,14 @@ weights_dep = [dep_pop[d] for d in dep_list]
 mod_dep = SIRWithUnknownInit(K = K_dep, n_obs = n_day, n_pop = n_pop, high_I = high_I, high_R = high_R, high_beta = high_beta, high_r0 = high_r0, weights_distance = weights_dep)
 y_obs_dep = np.array(I_obs_dep_V1)[None,:]
 
+print("Data importation done!")
 # Fit the data
-key = random.PRNGKey(0)
+key = random.PRNGKey(seed)
 
 key, key_smc = random.split(key)
 N = 1000
 alpha = .95
-smc_fr = abc_smc(key = key_smc, model = mod_fr, y_obs = y_obs_fr, n_particles= N, kernel = KernelTruncatedRW, verbose = 1, epsilon_target = 0., update_weights_distance= False, Final_iteration= 50)
+smc_fr = abc_smc(key = key_smc, model = mod_fr, y_obs = y_obs_fr, n_particles= N, kernel = KernelTruncatedRW, verbose = 1, epsilon_target = 0., update_weights_distance= False, Final_iteration= Final_iteration, N_iteration_max = N_iterations, alpha_epsilon= alpha)
 
 thetas_smc_fr = smc_fr["Thetas"][-1]
 zs_smc_fr = smc_fr["Zs"][-1]
@@ -120,44 +132,51 @@ epsilon_smc_fr = smc_fr["Eps_values"][-1]
 n_iterations_smc_fr = len(smc_fr["Eps_values"])
 
 
-smc_reg= perm_abc_smc(key = key, model = mod_reg, y_obs = y_obs_reg, n_particles= N, kernel = KernelTruncatedRW, verbose = 1, epsilon_target = 0., update_weights_distance= False, Final_iteration= 50, num_blocks_gibbs= 2, both_loc_glob= True)
+smc_reg= perm_abc_smc(key = key, model = mod_reg, y_obs = y_obs_reg, n_particles= N, kernel = KernelTruncatedRW, verbose = 1, epsilon_target = 0., update_weights_distance= False, Final_iteration= Final_iteration, num_blocks_gibbs= n_blocks_reg, both_loc_glob= True, N_iteration_max = N_iterations, alpha_epsilon= alpha)
 thetas_smc_reg = smc_reg["Thetas"][-1]
 zs_smc_reg = smc_reg["Zs"][-1]
 epsilon_smc_reg = smc_reg["Eps_values"][-1]
 n_iterations_smc_reg = len(smc_reg["Eps_values"])
 
 
-smc_dep= perm_abc_smc(key = key, model = mod_dep, y_obs = y_obs_dep, n_particles= N, kernel = KernelTruncatedRW, verbose = 1, epsilon_target = 0., update_weights_distance= False, Final_iteration= 50, num_blocks_gibbs= 5, both_loc_glob= True)
+smc_dep= perm_abc_smc(key = key, model = mod_dep, y_obs = y_obs_dep, n_particles= N, kernel = KernelTruncatedRW, verbose = 1, epsilon_target = 0., update_weights_distance= False, Final_iteration= Final_iteration, num_blocks_gibbs= n_blocks_dep, both_loc_glob= True, N_iteration_max = N_iterations)
 thetas_smc_dep = smc_dep["Thetas"][-1]
 zs_smc_dep = smc_dep["Zs"][-1]
 epsilon_smc_dep = smc_dep["Eps_values"][-1]
 n_iterations_smc_dep = len(smc_dep["Eps_values"])
 
 #Save the results
-dico_save = {"Thetas_smc_fr": thetas_smc_fr, "Zs_smc_fr": zs_smc_fr, "Eps_smc_fr": epsilon_smc_fr, "n_iterations_smc_fr": n_iterations_smc_fr,
+dico_save = {"Thetas_smc_fr": thetas_smc_fr, "Zs_smc_fr": zs_smc_fr, "Eps_smc_fr": epsilon_smc_fr,
+             "n_iterations_smc_fr": n_iterations_smc_fr,
             "Thetas_smc_reg": thetas_smc_reg, "Zs_smc_reg": zs_smc_reg, "Eps_smc_reg": epsilon_smc_reg, "n_iterations_smc_reg": n_iterations_smc_reg,
             "Thetas_smc_dep": thetas_smc_dep, "Zs_smc_dep": zs_smc_dep, "Eps_smc_dep": epsilon_smc_dep, "n_iterations_smc_dep": n_iterations_smc_dep}
 
 import pickle
-with open("./datas/sir_results.pkl", "wb") as f:
-    pickle.dump(dico_save, f)
-
-# Plot the results
-
-f, ax = plt.subplots(1, 1, figsize=(8, 8))
-sns.kdeplot(thetas_smc_dep.glob[:,0],  label='Departments scale', linewidth=2, linestyle='-', color='blue')
-sns.kdeplot(thetas_smc_reg.glob[:,0], label='Regions scale', linewidth=2, color='orange', linestyle='--')
-sns.kdeplot(thetas_smc_fr.glob[:,0], label='National scale', linewidth=2, color='green', linestyle='-.')
-
-# Adding labels and title
-plt.xlabel('$R_0$', fontsize=12)
-plt.ylabel('Density', fontsize=12)
+import lzma
+path_dico  = "figures/sir/SIR_results{}.xz".format(seed)
+with open(path_dico, 'wb') as file:
+    lzma_file = lzma.compress(pickle.dumps(dico_save))
+    file.write(lzma_file)
+print("Results saved in {}".format(path_dico), flush = True)
 
 
-# Adding legend
+
+# # Plot the results
+
+# f, ax = plt.subplots(1, 1, figsize=(8, 8))
+# sns.kdeplot(thetas_smc_dep.glob[:,0],  label='Departments scale', linewidth=2, linestyle='-', color='blue')
+# sns.kdeplot(thetas_smc_reg.glob[:,0], label='Regions scale', linewidth=2, color='orange', linestyle='--')
+# sns.kdeplot(thetas_smc_fr.glob[:,0], label='National scale', linewidth=2, color='green', linestyle='-.')
+
+# # Adding labels and title
+# plt.xlabel('$R_0$', fontsize=12)
+# plt.ylabel('Density', fontsize=12)
+
+
+# # Adding legend
 # plt.legend()
 
-# Display the plo
-plt.savefig("SIR_R0_posterior.pdf")
-plt.show()
+# # Display the plo
+# plt.savefig("figures/sir/SIR_R0_posterior.pdf")
+# plt.show()
 

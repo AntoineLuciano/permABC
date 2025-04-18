@@ -8,7 +8,7 @@ from scipy.stats import norm, multivariate_normal
 from scipy.optimize import linear_sum_assignment
 from jax import random,jit, vmap
 import jax.numpy as jnp
-from utils import Theta
+from utils_functions import Theta
 from jax.scipy.stats import truncnorm
 from jax.scipy.special import logsumexp
 from tqdm import tqdm
@@ -111,7 +111,7 @@ def abc_pmc(key, model, n_particles, epsilon_target, alpha, y_obs, epsilon_1 = n
     new_zs = model.data_generator(key_zs, new_thetas)
     if update_weights_distance: model.update_weights_distance(new_zs)
     distance_values = model.distance(new_zs, y_obs)
-    if verbose >=1: print("DISTANCE VALUES: MIN = {:.3}, MAX = {:.3} MEAN = {:.3}".format(np.min(distance_values), np.max(distance_values), np.mean(distance_values)))  
+    # if verbose >=1: print("DISTANCE VALUES: MIN = {:.3}, MAX = {:.3} MEAN = {:.3}".format(np.min(distance_values), np.max(distance_values), np.mean(distance_values)))  
     weights = np.ones(n_particles) / n_particles
     epsilon = np.inf
     ess_val = ess(weights)
@@ -153,20 +153,22 @@ def abc_pmc(key, model, n_particles, epsilon_target, alpha, y_obs, epsilon_1 = n
             time_it = time.time()
             key, key_move = random.split(key)
             
-            proposed_thetas, proposed_distances, proposed_zs = move_pmc(key = key_move, model = model, thetas = thetas,  weights = weights, y_obs = y_obs, size = int((n_particles-n_accept)/accept_ratee), std_loc = std_loc, std_glob = std_glob)
+            proposed_thetas, proposed_distances, proposed_zs = move_pmc(key = key_move, model = model, thetas = thetas,  weights = weights, y_obs = y_obs, size = int(n_particles-n_accept), std_loc = std_loc, std_glob = std_glob)
             
             accept = np.where(proposed_distances < epsilon)[0]
             new_thetas.append(proposed_thetas[accept])
             distance_values = np.append(distance_values, proposed_distances[accept])
 
             new_zs = np.append(new_zs, proposed_zs[accept], axis = 0)
-            accept_ratee = 1. 
-            n_sim += int((n_particles-n_accept)/accept_ratee)
-            accept_rate = max(len(accept)/int((n_particles-n_accept)/accept_ratee), .001)
+
+            n_sim += n_particles - n_accept
+            accept_rate = max(len(accept)/(n_particles-n_accept), .001)
             n_accept += len(accept)
         Nsim.append(n_sim*K)
-        print("NUMBER OF SIMULATIONS: {}/{}".format(np.sum(Nsim), N_sim_max))
         
+        accept_rate = n_particles/ n_sim
+        print("NUMBER OF SIMULATIONS: {}/{}".format(np.sum(Nsim), N_sim_max))
+        print("ACCEPT RATE: {:.3}".format(accept_rate), "STOPPING ACCEPT RATE: {:.3}".format(stopping_accept_rate))
         if accept_rate < stopping_accept_rate or np.sum(Nsim)> N_sim_max: 
             print("Accept rate too low, we stop the algorithm")
             epsilon_target = epsilon

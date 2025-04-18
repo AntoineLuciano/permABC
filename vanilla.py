@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from jax import random, jit, vmap
 from jax.lax import while_loop
-from utils import Theta
+from utils_functions import Theta
 from distances import optimal_index_distance  
 import numpy as np
 

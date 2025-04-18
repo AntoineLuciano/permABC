@@ -3,7 +3,7 @@ from jax import random
 import numba as nb  # Import Numba for acceleration
 from scipy.stats import norm
 from permABC.model import model
-from permABC.utils import Theta  # Import Theta from utils_functions
+from permABC.utils_functions import Theta  # Import Theta from utils_functions
 
 @nb.njit
 def gk_transformation(Z, alpha, B, g, k):

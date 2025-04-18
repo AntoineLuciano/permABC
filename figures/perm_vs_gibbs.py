@@ -12,7 +12,7 @@ from under_matching import perm_abc_smc_um
 from kernels import KernelTruncatedRW
 from distances import optimal_index_distance
 from models.Gaussian_with_correlated_params import GaussianWithCorrelatedParams
-from utils import Theta
+from permABC.utils_functions import Theta
 from jax import random
 import numpy as np
 import jax.numpy as jnp

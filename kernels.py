@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from jax import random
 from jax.scipy.stats import truncnorm, multivariate_normal
-from utils import Theta
+from utils_functions import Theta
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt

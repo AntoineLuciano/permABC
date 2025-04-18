@@ -1,4 +1,4 @@
-from utils import ess, resampling
+from utils_functions import ess, resampling
 from distances import optimal_index_distance
 from moves import move_smc, move_smc_gibbs_blocks
 import numpy as np
@@ -45,7 +45,7 @@ def update_weights(weights, distance_values, epsilon):
         
 
 
-def abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_epsilon = .95, Final_iteration = 0, alpha_resample = 0.5, num_blocks_gibbs = 0, update_weights_distance = False, verbose = 1, N_sim_max = np.inf, stopping_accept_rate = .015, both_loc_glob = False):
+def abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_epsilon = .95, Final_iteration = 0, alpha_resample = 0.5, num_blocks_gibbs = 0, update_weights_distance = False, verbose = 1, N_sim_max = np.inf, N_iteration_max = np.inf, stopping_accept_rate = .015, both_loc_glob = False):
     
     time_0 = time.time()
     if update_weights_distance:
@@ -111,12 +111,16 @@ def abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_epsilo
         if epsilon == epsilon_target:
             Final_iteration -= 1
             
-        if acc_rate < stopping_accept_rate or epsilon == epsilon_target or np.sum(Nsim) >= N_sim_max:
+        if acc_rate < stopping_accept_rate or epsilon == epsilon_target or np.sum(Nsim) >= N_sim_max or t >= N_iteration_max:
             epsilon_target = epsilon
             
-        if acc_rate < stopping_accept_rate and verbose>0:
-            print("Acceptance rate is too low, stopping the algorithm for epsilon = ", epsilon)
+        if acc_rate < stopping_accept_rate and verbose>0: print("Acceptance rate is too low, stopping the algorithm for epsilon = ", epsilon)
+        if np.sum(Nsim) >= N_sim_max and verbose>0: print("Maximum number of simulations reached")
+        if t >= N_iteration_max and verbose>0: print("Maximum number of iterations reached")
+        
         if verbose>0: print()
+        
+        
       
     out = {"Thetas": Thetas, "Zs": Zs, "Weights": Weights, "Ess": Ess, "Eps_values": Epsilon, "Dist": Dist, "N_sim": Nsim, "Time": Time, "Acc_rate": Acc_rate,  "unique_part": Unique_p, "unique_comp": Unique_c, "time_final": time.time()-time_0}
     return out
@@ -125,7 +129,7 @@ def abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_epsilo
 
 
 
-def perm_abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_epsilon = .95, Final_iteration = 0, alpha_resample = 0.5, num_blocks_gibbs = 0, update_weights_distance = False, verbose = 1, N_sim_max = np.inf, stopping_accept_rate = .015, both_loc_glob = False):
+def perm_abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_epsilon = .95, Final_iteration = 0, alpha_resample = 0.5, num_blocks_gibbs = 0, update_weights_distance = False, verbose = 1, N_sim_max = np.inf, N_iteration_max = np.inf, stopping_accept_rate = .015, both_loc_glob = False):
     time_0 = time.time()
     if update_weights_distance:
         model.reset_weights_distance()
@@ -205,15 +209,17 @@ def perm_abc_smc(key, model, n_particles, epsilon_target, y_obs, kernel, alpha_e
         if verbose>0:
             print(f"Iteration {t}: Espilon = {epsilon:0.4f}, ESS = {ess_val:0.0f} Acc. rate = {acc_rate:.2%} Uniqueness rate particules = {len(np.unique(thetas.reshape_2d(),axis=0))/n_particles:.1%} Uniqueness rate components = {len(np.unique(thetas.reshape_2d()))/np.prod(thetas.reshape_2d().shape):.1%} Global parameters uniqueness rate = {len(np.unique(thetas.glob))/n_particles:.1%}")
         if verbose > 1 and N_sim_max<np.inf:print("NUMBER OF SIMULATIONS {}/{}".format(np.sum(Nsim), N_sim_max))
-        if acc_rate < stopping_accept_rate or epsilon == epsilon_target or np.sum(Nsim) >= N_sim_max:
+        if acc_rate < stopping_accept_rate or epsilon == epsilon_target or np.sum(Nsim) >= N_sim_max or t >= N_iteration_max:
             epsilon_target = epsilon
             apply_permutation = True
             
-        if acc_rate < stopping_accept_rate and verbose>0:
-            print("Acceptance rate is too low, stopping the algorithm for epsilon = ", epsilon)
+        if acc_rate < stopping_accept_rate and verbose>0: print("Acceptance rate is too low, stopping the algorithm for epsilon = ", epsilon)
+        if np.sum(Nsim) >= N_sim_max and verbose>0: print("Maximum number of simulations reached")
+        if t >= N_iteration_max and verbose>0: print("Maximum number of iterations reached")
+            
             
         if apply_permutation and Final_iteration <=0 : 
-            print("Apply permutation")
+            if verbose >0: print("Apply permutation")
             thetas, zs = thetas.apply_permutation(zs_index),np.concatenate([zs[np.arange(n_particles)[:, np.newaxis], zs_index], zs[:,K:]], axis = 1)
             zs_index = np.repeat([np.arange(model.K)], n_particles, axis = 0) 
         if verbose>0: print()

@@ -1,7 +1,5 @@
-# Initialization
 import os 
-
-os.chdir("/Users/antoineluciano/Documents/Recherche/permABC_new/permABC")
+os.chdir("..")
 import sys
 sys.path.append(os.getcwd())
 

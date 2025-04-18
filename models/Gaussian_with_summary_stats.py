@@ -1,8 +1,8 @@
 import jax.numpy as jnp
 from jax import random, vmap
 from scipy.stats import invgamma
-from permABC.model import model
-from permABC.utils import Theta  # Import Theta from utils_functions
+from model import model
+from utils_functions import Theta  # Import Theta from utils_functions
 
 class GaussianWithSummaryStats(model):
     def __init__(self, K, n_obs=1, mu_0=0, sigma_0=5, alpha=2, beta=2):

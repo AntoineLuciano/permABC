@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from jax import random, vmap
 from scipy.stats import invgamma, norm
 from models import model
-from utils import Theta  # Import Theta from utils
+from permABC.utils_functions import Theta  # Import Theta from utils
 import numpy as np
 
 class Uniform_known(model):

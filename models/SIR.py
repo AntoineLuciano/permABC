@@ -6,7 +6,7 @@ jax.config.update("jax_enable_x64", True)
 import numba as nb  # Import Numba for acceleration
 from models import model
 from jax import jit, vmap  
-from utils import Theta  # Import Theta from utils_functions
+from utils_functions import Theta  # Import Theta from utils_functions
 import jax.numpy as jnp
 import numpy as np
 

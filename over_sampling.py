@@ -1,4 +1,4 @@
-from utils import ess, resampling
+from utils_functions import ess, resampling
 from distances import optimal_index_distance
 from moves import move_smc, move_smc_gibbs_blocks
 from smc import update_weights

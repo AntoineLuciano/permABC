@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from jax import random
 import numba as nb  # Import Numba for acceleration
 from models import model
-from utils import Theta  # Import Theta from utils_functions
+from utils_functions import Theta  # Import Theta from utils_functions
 import numpy as np
 from jax.scipy.stats import norm
 

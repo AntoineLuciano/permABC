@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import numpy as np
 from jax import random
-from utils import Theta
+from utils_functions import Theta
 from distances import optimal_index_distance
 from jax import vmap, random
 
@@ -164,9 +164,9 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
     proposed_thetas_glob.glob[glob_update] = proposed_thetas.glob[glob_update]
     
     proposed_zs_glob = zs.copy()
-    print("Sampling {} zs...".format(np.sum(block_choice_glob)))
+    # print("Sampling {} zs...".format(np.sum(block_choice_glob)))
     proposed_zs_glob[glob_update] = model.data_generator(key_data, proposed_thetas_glob[glob_update])
-    print("Computing {} distances...".format(np.sum(block_choice_glob)))
+    # print("Computing {} distances...".format(np.sum(block_choice_glob)))
     if perm:
         proposed_distances_glob, proposed_ys_index_glob, proposed_zs_index_glob, n_lsa_glob = optimal_index_distance(
             model=model,
@@ -190,8 +190,8 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
     prior_backward = model.prior_logpdf(thetas[glob_update])
     prior_logratio = jnp.minimum(prior_forward - prior_backward, 703)
     kernel_logratio = backward_kernel_glob.logpdf(thetas[glob_update]) - forward_kernel_glob.logpdf(proposed_thetas_glob[glob_update])
-    print("Kernel ratio: min = {:.3}, max = {:.3}, mean = {:.3}".format(jnp.min(kernel_logratio), jnp.max(kernel_logratio), jnp.mean(kernel_logratio)))
-    print("Prior ratio: min = {:.3}, max = {:.3}, mean = {:.3}".format(jnp.min(prior_logratio), jnp.max(prior_logratio), jnp.mean(prior_logratio)))
+    # print("Kernel ratio: min = {:.3}, max = {:.3}, mean = {:.3}".format(jnp.min(kernel_logratio), jnp.max(kernel_logratio), jnp.mean(kernel_logratio)))
+    # print("Prior ratio: min = {:.3}, max = {:.3}, mean = {:.3}".format(jnp.min(prior_logratio), jnp.max(prior_logratio), jnp.mean(prior_logratio)))
     accept_prob = (proposed_distances_glob <= epsilon) * jnp.exp(prior_logratio + kernel_logratio)
     accept_prob = jnp.nan_to_num(jnp.minimum(accept_prob, 1))
 

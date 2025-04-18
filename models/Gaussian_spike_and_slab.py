@@ -3,7 +3,7 @@ from jax import random
 import numba as nb  # Import Numba for acceleration
 from scipy.stats import invgamma, norm
 from permABC.model import model
-from permABC.utils import Theta  # Import Theta from utils_functions
+from permABC.utils_functions import Theta  # Import Theta from utils_functions
 
 class GaussianWithSpikeSlab(model):
     def __init__(self, K, n_obs=1, sigma_spike=0.1, sigma_slab=2.0, a_ig=2, b_ig=2):
