@@ -7,8 +7,7 @@ plan is rounded to a permutation via row-wise argmax.
 
 Complexity per problem: O(K^2 * n_iter), where n_iter is typically 50-200.
 
-Three backends (auto-dispatched):
-  - JAX (preferred): vmap + jit + lax.while_loop — batched over particles
+Two backends (auto-dispatched):
   - Numba: @njit(parallel=True) with prange — parallel over particles
   - NumPy (fallback): Python loop over particles
 """
@@ -18,15 +17,6 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Optional backend imports
 # ---------------------------------------------------------------------------
-try:
-    import jax
-    jax.config.update("jax_enable_x64", True)
-    import jax.numpy as jnp
-    from jax import jit, vmap, lax
-    _HAS_JAX = True
-except ImportError:
-    _HAS_JAX = False
-
 try:
     import numba as nb
     _HAS_NUMBA = True
@@ -115,102 +105,6 @@ def _sinkhorn_numpy(cost_matrices, reg, max_iter, tol):
         zs_idx[i] = zs_i
 
     return ys_idx, zs_idx
-
-
-# ===================================================================
-# JAX backend (preferred)
-# ===================================================================
-
-if _HAS_JAX:
-
-    @jit
-    def _sinkhorn_jax_single(cost, reg, max_iter, tol):
-        """
-        JAX Sinkhorn for a single (K, K) cost matrix.
-        Uses lax.while_loop for convergence — fully JIT-compatible.
-        """
-        K = cost.shape[0]
-        log_K = -cost / reg
-        log_r = jnp.full(K, -jnp.log(K))
-
-        def body(state):
-            f, g, it, _ = state
-            f_new = log_r - jax.scipy.special.logsumexp(log_K + g[None, :], axis=1)
-            g_new = log_r - jax.scipy.special.logsumexp(log_K + f_new[:, None], axis=0)
-            diff = jnp.max(jnp.abs(g_new - g))
-            return f_new, g_new, it + 1, diff
-
-        def cond(state):
-            _, _, it, diff = state
-            return (it < max_iter) & (diff > tol)
-
-        f0 = jnp.zeros(K)
-        g0 = jnp.zeros(K)
-        # Run one iteration to initialize diff
-        f1, g1, _, diff0 = body((f0, g0, 0, jnp.inf))
-        f_final, g_final, _, _ = lax.while_loop(cond, body, (f1, g1, 1, diff0))
-
-        log_P = f_final[:, None] + log_K + g_final[None, :]
-        P = jnp.exp(log_P)
-        return P
-
-    @jit
-    def _round_plan_jax_single(P):
-        """
-        Round a (K, K) transport plan to a permutation.
-        Greedy collision resolution using lax.fori_loop.
-        """
-        K = P.shape[0]
-        # Initial argmax
-        zs = jnp.argmax(P, axis=1)
-
-        def resolve_row(i, state):
-            zs, used = state
-            col = zs[i]
-            is_collision = used[col]
-
-            # Build preference order for this row (descending P value)
-            order = jnp.argsort(-P[i])
-            # Find first unused column in preference order
-            unused_mask = ~used[order]
-            # argmax on bool gives first True
-            first_free_idx = jnp.argmax(unused_mask)
-            alt_col = order[first_free_idx]
-
-            new_col = jnp.where(is_collision, alt_col, col)
-            zs = zs.at[i].set(new_col)
-            used = used.at[new_col].set(True)
-            return zs, used
-
-        used0 = jnp.zeros(K, dtype=bool)
-        zs_final, _ = lax.fori_loop(0, K, resolve_row, (zs, used0))
-        return zs_final
-
-    # Batched versions via vmap
-    _sinkhorn_jax_batch_plans = None  # lazily compiled
-
-    def _sinkhorn_jax(cost_matrices, reg, max_iter, tol):
-        """JAX backend: vmap over batch dimension."""
-        global _sinkhorn_jax_batch_plans
-
-        cost_jax = jnp.asarray(cost_matrices)
-        N, K, _ = cost_jax.shape
-        reg_jax = jnp.float64(reg)
-        max_iter_static = int(max_iter)
-        tol_jax = jnp.float64(tol)
-
-        # vmap the Sinkhorn solver over the batch dimension
-        plans = vmap(
-            lambda c: _sinkhorn_jax_single(c, reg_jax, max_iter_static, tol_jax)
-        )(cost_jax)  # (N, K, K)
-
-        # vmap the rounding over the batch dimension
-        zs_all = vmap(_round_plan_jax_single)(plans)  # (N, K)
-
-        # Convert back to numpy
-        zs_np = np.asarray(zs_all, dtype=np.int32)
-        ys_np = np.tile(np.arange(K, dtype=np.int32), (N, 1))
-        return ys_np, zs_np
 
 
 # ===================================================================
@@ -403,20 +297,12 @@ def sinkhorn_assignment(cost_matrices, reg=None, max_iter=200, tol=1e-6,
         reg = max(0.01 * mean_cost, 1e-10)
 
     if backend == "auto":
-        # Numba is consistently faster than JAX for Sinkhorn
-        # (parallel prange + compiled standard-domain iterations)
         if _HAS_NUMBA:
             backend = "numba"
-        elif _HAS_JAX:
-            backend = "jax"
         else:
             backend = "numpy"
 
-    if backend == "jax":
-        if not _HAS_JAX:
-            raise ImportError("JAX not available")
-        return _sinkhorn_jax(cost_matrices, reg, max_iter, tol)
-    elif backend == "numba":
+    if backend == "numba":
         if not _HAS_NUMBA:
             raise ImportError("Numba not available")
         return _sinkhorn_numba(cost_matrices, reg, max_iter, tol)

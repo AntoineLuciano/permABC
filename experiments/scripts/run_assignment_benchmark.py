@@ -28,7 +28,7 @@ from permabc.assignment.dispatch import (
     _apply_lsa, _apply_sinkhorn, _apply_hilbert, _apply_swap,
     do_swap, do_hilbert,
 )
-from permabc.assignment.solvers.lsa import solve_lsa, solve_lsa_custom, _HAS_CUSTOM_LSA
+from permabc.assignment.solvers.lsa import solve_lsa
 from permabc.assignment.solvers.sinkhorn import sinkhorn_assignment, _HAS_NUMBA as _SINK_HAS_NUMBA
 from permabc.assignment.solvers.swap import _HAS_NUMBA
 from permabc.assignment.solvers.hilbert import _HAS_CGAL
@@ -41,8 +41,6 @@ from permabc.assignment.distances import compute_total_distance
 
 MICRO_METHODS = [
     {"name": "LSA (scipy)",      "fn": "lsa"},
-    {"name": "LSA custom cold",  "fn": "lsa_custom_cold"},
-    {"name": "LSA custom warm",  "fn": "lsa_custom_warm"},
     {"name": "Hilbert",          "fn": "hilbert"},
     {"name": "Hilbert+Swap",     "fn": "hilbert_swap"},
     {"name": "Sinkhorn (numpy)", "fn": "sinkhorn_numpy"},
@@ -76,19 +74,6 @@ def _solve_micro(fn_name, local_mats, global_d, model, zs, y_obs, M, K,
 
     if fn_name == "lsa":
         ys, zs_idx = solve_lsa(local_mats, parallel=True)
-        dists = compute_total_distance(zs_idx, ys, local_mats, global_d)
-
-    elif fn_name == "lsa_custom_cold":
-        if not _HAS_CUSTOM_LSA:
-            return None, None, None, np.nan, np.nan, np.nan
-        ys, zs_idx = solve_lsa_custom(local_mats, init_col4row=None, parallel=True)
-        dists = compute_total_distance(zs_idx, ys, local_mats, global_d)
-
-    elif fn_name == "lsa_custom_warm":
-        if not _HAS_CUSTOM_LSA:
-            return None, None, None, np.nan, np.nan, np.nan
-        # Use LSA solution as warm-start hint (simulates warm-start from previous iter)
-        ys, zs_idx = solve_lsa_custom(local_mats, init_col4row=zs_lsa, parallel=True)
         dists = compute_total_distance(zs_idx, ys, local_mats, global_d)
 
     elif fn_name == "hilbert":
@@ -360,7 +345,7 @@ def main():
         os.path.dirname(__file__), '..', 'results', 'assignment_benchmark_final')
     os.makedirs(out_dir, exist_ok=True)
 
-    print(f"Numba: {_HAS_NUMBA}  |  CGAL: {_HAS_CGAL}  |  Custom LSA: {_HAS_CUSTOM_LSA}  |  Sinkhorn Numba: {_SINK_HAS_NUMBA}")
+    print(f"Numba: {_HAS_NUMBA}  |  CGAL: {_HAS_CGAL}  |  Sinkhorn Numba: {_SINK_HAS_NUMBA}")
     print(f"K: {args.K}  |  n_obs: {args.n_obs}  |  N={args.n_particles}  "
           f"|  repeats={args.n_repeats}  |  seed={args.seed}")
     print(f"Output: {out_dir}\n")

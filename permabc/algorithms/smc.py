@@ -572,8 +572,13 @@ def abc_smc(
                 print(f"Iteration {t}: Epsilon = {epsilon:0.4f}, ESS = {ess_val:0.0f}, "
                       f"Acc. rate = {acc_rate:.2%} (Global: {acc_rate_global:.2%}, Local: {acc_rate_local:.2%})")
             else:
+                abc_rej = getattr(result, 'abc_reject_rate', None)
+                mh_rej = getattr(result, 'mh_reject_rate', None)
+                diag_str = ""
+                if abc_rej is not None:
+                    diag_str = f" [ABC rej: {abc_rej:.1%}, MH rej: {mh_rej:.1%}]"
                 print(f"Iteration {t}: Epsilon = {epsilon:0.4f}, ESS = {ess_val:0.0f}, "
-                      f"Acc. rate = {acc_rate:.2%}")
+                      f"Acc. rate = {acc_rate:.2%}{diag_str}")
             print(f"Uniqueness rates: Particles = {diagnostics['unique_part']:.1%}, "
                   f"Parameters = {diagnostics['unique_comp']:.1%}, "
                   f"Local = {diagnostics['unique_loc']:.1%}, "
@@ -660,6 +665,7 @@ def perm_abc_smc(
     try_sinkhorn: bool = False,
     try_swaps: bool = True,
     try_lsa: bool = True,
+    block_cascade: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Permutation-enhanced ABC-SMC algorithm.
@@ -832,7 +838,7 @@ def perm_abc_smc(
                 epsilon=epsilon, y_obs=y_obs, distance_values=distance_values[alive],
                 kernel=kernel, H=num_blocks_gibbs, verbose=verbose,
                 both_loc_glob=both_loc_glob, perm=True, parallel=parallel,
-                cascade=cascade,
+                cascade=cascade, block_cascade=block_cascade,
             )
             
             # Update particles and permutations
@@ -885,8 +891,13 @@ def perm_abc_smc(
                 print(f"Iteration {t}: Epsilon = {epsilon:0.4f}, ESS = {ess_val:0.0f}, "
                       f"Acc. rate = {acc_rate:.2%} (Global: {acc_rate_global:.2%}, Local: {acc_rate_local:.2%})")
             else:
+                abc_rej = getattr(result, 'abc_reject_rate', None)
+                mh_rej = getattr(result, 'mh_reject_rate', None)
+                diag_str = ""
+                if abc_rej is not None:
+                    diag_str = f" [ABC rej: {abc_rej:.1%}, MH rej: {mh_rej:.1%}]"
                 print(f"Iteration {t}: Epsilon = {epsilon:0.4f}, ESS = {ess_val:0.0f}, "
-                      f"Acc. rate = {acc_rate:.2%}")
+                      f"Acc. rate = {acc_rate:.2%}{diag_str}")
             print(f"Uniqueness rates: Particles = {diagnostics['unique_part']:.1%}, "
                   f"Parameters = {diagnostics['unique_comp']:.1%}, "
                   f"Local = {diagnostics['unique_loc']:.1%}, "

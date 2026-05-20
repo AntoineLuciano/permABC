@@ -68,6 +68,18 @@ The SIR section is well-written and honest about model misspecification. However
     \item The claim that ``\textsc{permABC} was specifically designed for these challenges'' positions the SIR as the motivating application, yet the numerical evidence is limited to two figures (posterior of $R_0$ and a map). At minimum, I would expect posterior predictive checks or a simulation study on synthetic SIR data with known parameters.
 \end{itemize}
 
+\major{6} \textbf{No numerical comparison with Wasserstein ABC.}
+
+The revised manuscript now clarifies in Section~1.2 and in an asymptotic appendix that \textsc{permABC} is a hierarchical analogue of \textsc{WABC} at the compartment level, and coincides with it in the one-dimensional case. These connections are textual only: no experiment on the Gaussian toy model compares the two approaches in terms of accuracy, runtime, or robustness, despite the claim that exact \textsc{LSA} is preferable in the regime of moderate~$K$ and non-trivial per-compartment dimension. A direct benchmark against \textsc{WABC}'s Hilbert-based and Sinkhorn-based approximations---on the toy Gaussian model where the posterior is closed-form---would substantiate this claim and address a point raised by earlier readers of this manuscript.
+
+\major{7} \textbf{Lemma~1 and Theorem~1 should be extended to the case of ties.}
+
+The current statement of Lemma~1 assumes that no pair of observed compartments have exactly equal data. In practice, even for continuous data, observations that are numerically close force $\varepsilon^*$ to be very small and render the regime $\varepsilon<\varepsilon^*$ essentially inaccessible. A natural and low-cost improvement is to redefine $\varepsilon^*$ as half the minimum distance between \emph{distinct} observations, and to argue that the cardinality of accepted permutations is then constant (rather than at most one). Theorem~1's conclusion would then extend to that setting with a minor reweighting. This was explicitly suggested during a previous round of reviews.
+
+\major{8} \textbf{Narrow scope of LFI benchmark.}
+
+Beyond ABC and ABC-Gibbs, the likelihood-free inference landscape now includes neural posterior/likelihood estimation (e.g.\ SNPE/SNLE), simulation-based inference via normalizing flows, and generalised Bayesian methods that operate on discrepancies closely related to the one used here. The current comparison---against Vanilla ABC, ABC-PMC, ABC-Gibbs---does not position \textsc{permABC} within this wider landscape. I do not require a full battery of NN-based methods, but a short discussion, and ideally one numerical point on the Gaussian toy model, would help the reader gauge when \textsc{permABC} is the right tool.
+
 \section*{Minor concerns}
 
 \minor{1} \textbf{Section~2 starts with a \texttt{\textbackslash subsection} and no introductory text.} The reader jumps from the section heading directly into ``State of the art.'' A brief paragraph outlining the three strategies would help.
@@ -84,7 +96,15 @@ The SIR section is well-written and honest about model misspecification. However
 
 \minor{7} \textbf{The ``unique particle rate'' (Section~2.1)} is proposed as a complementary diagnostic for sample diversity but is never reported in any experiment. Either use it or remove the discussion.
 
-\minor{8} \textbf{Missing discussion of computational cost.} The $\mathcal{O}(K^3)$ cost of the assignment step is mentioned but never benchmarked. For $K = 94$ (SIR), what fraction of the total runtime is spent in the assignment step versus simulation? This matters for practitioners deciding whether to adopt the method.
+\minor{8} \textbf{Missing discussion of computational cost.} The $\mathcal{O}(K^3)$ cost of the assignment step is mentioned but never benchmarked. For $K = 94$ (SIR), what fraction of the total runtime is spent in the assignment step versus simulation? This matters for practitioners deciding whether to adopt the method. The revised Section~2.3 on warm-started swaps claims an $\mathcal{O}(K^2)$ amortised cost; this should be substantiated by a quantitative comparison between full \textsc{LSA} and the proposed warm-swap scheme, ideally reporting both runtime and the fraction of iterations for which the returned permutation coincides with the exact optimum.
+
+\minor{9} \textbf{Hyperparameters of the Gaussian toy model are not reported.} Section~3.2 refers to ``a classical hierarchical model'' without specifying $(a,b,s,n)$ or the values of $K$ tested. These should appear in the main text or in the figure captions.
+
+\minor{10} \textbf{Initialization of permABC-OS.} Appendix~C.2 calibrates $\varepsilon$ as a function of $M_0$ under a fixed simulation budget. It is unclear what happens when the budget forces $M_0$ to be too small for the target $\varepsilon^*$. Would importance-based proposals for $\theta$ (rather than prior sampling) help? This has practical implications.
+
+\minor{11} \textbf{Role of the critical tolerance $\varepsilon^*$ in applications.} The small-$\varepsilon$ regime where \textsc{permABC} and standard ABC coincide relies on $\varepsilon < \varepsilon^*$, but for realistic data $\varepsilon^*$ can be extremely small (a few nearly-duplicate compartments suffice). The paper should discuss how the practitioner is expected to behave when $\varepsilon > \varepsilon^*$: which of the two pseudo-posteriors is preferable, and on what grounds?
+
+\minor{12} \textbf{Complex epidemiological models.} The SIR application is simple relative to what is common in modern epidemiology (SEIHR, age structure, delayed observation). A discussion of scalability beyond the current three local parameters per compartment would strengthen the case for real-world adoption.
 
 \section*{Questions for the authors}
 
@@ -93,6 +113,8 @@ The SIR section is well-written and honest about model misspecification. However
     \item What happens to \textsc{permABC} when exchangeability is only approximate (e.g.\ mildly heterogeneous priors across compartments)?
     \item For the SIR application, have you run a simulation study with known ground truth to validate the method before applying it to real data?
     \item The asymptotic material connecting \textsc{permABC} to WABC (compartment-level Wasserstein viewpoint, $K \to \infty$ limit) seems highly relevant. Why was it not included?
+    \item Can you provide a closed-form normal--normal example $\mu_k \sim N(\beta,1)$, $y_k \sim N(\mu_k,1)$ in which the behaviour of \textsc{permABC-OS} as a function of $M$ can be compared analytically with standard rejection ABC (for which Bornn et al.\ (2017) show that increasing $M$ still yields samples from $\pi_\varepsilon$)? This would clarify whether the effect of $M$ is specific to \textsc{permABC}.
+    \item Do the tracked-change macros ($\backslash\texttt{new}$, $\backslash\texttt{old}$) correspond to all substantive changes made since the previous version? A summary of modifications would help subsequent rounds of review.
 \end{enumerate}
 
 \section*{Assessment}
@@ -102,7 +124,10 @@ The core idea of \textsc{permABC} is sound, practically motivated, and computati
     \item at least one proper posterior quality metric beyond $\varepsilon$,
     \item a comparison with standard ABC-SMC (without permutations),
     \item either formal statements of the $M \to \infty$ results or integration of the existing asymptotic material,
-    \item a simulation-based validation of the SIR model (synthetic data with known truth).
+    \item a simulation-based validation of the SIR model (synthetic data with known truth),
+    \item a numerical benchmark against \textsc{WABC} (Hilbert/Sinkhorn approximations) on the Gaussian toy model,
+    \item an extension of Lemma~1 / Theorem~1 to the case of ties,
+    \item a quantitative substantiation of the $\mathcal{O}(K^2)$ warm-swap claim of Section~2.3.
 \end{enumerate}
 
 \noindent With these additions, the paper would make a solid contribution to JASA.

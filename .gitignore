@@ -190,6 +190,7 @@ figures/*/cluster/
 # Temporary and old files
 *_old.py
 tree.txt
+*.icloud
 
 # Generated figures (keep only source scripts)
 figures/*.png

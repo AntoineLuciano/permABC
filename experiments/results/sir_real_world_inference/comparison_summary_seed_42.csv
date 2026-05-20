@@ -1,0 +1,2 @@
+method,scale,n_iterations,total_n_sim,time,final_epsilon
+permABC-SMC,national,388,155732,117.68781280517578,1596.2991229102217

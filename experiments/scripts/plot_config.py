@@ -121,15 +121,30 @@ def records_from_pkl(pkl_path):
     """Load summary records from a benchmark pickle file.
 
     Returns (records, raw_data) where *records* is a list[dict].
+    Falls back to CSV if pickle fails (e.g. pandas version mismatch).
     """
-    with open(pkl_path, "rb") as f:
-        data = pickle.load(f)
-    df = data.get("summary_df")
-    if df is None:
-        raise ValueError(f"No summary_df in {pkl_path}")
-    if hasattr(df, "to_dict"):
-        return df.to_dict(orient="records"), data
-    return list(df), data
+    try:
+        with open(pkl_path, "rb") as f:
+            data = pickle.load(f)
+        df = data.get("summary_df")
+        if df is None:
+            raise ValueError(f"No summary_df in {pkl_path}")
+        if hasattr(df, "to_dict"):
+            for col in df.columns:
+                try:
+                    if str(df[col].dtype) == "string":
+                        df[col] = df[col].astype(str)
+                except Exception:
+                    pass
+            return df.to_dict(orient="records"), data
+        return list(df), data
+    except (NotImplementedError, TypeError) as e:
+        # Pandas version mismatch — fall back to CSV
+        import pandas as pd
+        csv_path = pkl_path.replace(".pkl", ".csv")
+        print(f"WARNING: pickle load failed ({e.__class__.__name__}), falling back to CSV: {csv_path}")
+        df = pd.read_csv(csv_path)
+        return df.to_dict(orient="records"), {"summary_df": df}
 
 
 def detect_joint_key(records):

@@ -12,7 +12,6 @@ from typing import Optional, Tuple, List
 
 from .solvers.lsa import solve_lsa
 from .solvers.hilbert import (
-    hilbert_distance, solve_hilbert,
     hilbert_distance_cgal, solve_hilbert_cgal, _HAS_CGAL,
 )
 from .solvers.sinkhorn import sinkhorn_assignment
@@ -30,17 +29,23 @@ from .distances import (
 # ===================================================================
 
 def do_hilbert(zs_slice, y_ref, weights):
-    """Hilbert assignment — CGAL if available, else PCA+2D."""
-    if _HAS_CGAL:
-        return hilbert_distance_cgal(zs_slice, y_ref, weights)
-    return hilbert_distance(zs_slice, y_ref, weights, n_bits=12)
+    """Hilbert assignment via CGAL."""
+    if not _HAS_CGAL:
+        raise ImportError(
+            "CGAL Hilbert module required. "
+            "Run:  bash permabc/core/build_cgal.sh"
+        )
+    return hilbert_distance_cgal(zs_slice, y_ref, weights)
 
 
 def do_hilbert_solve(zs_slice, y_ref):
-    """Hilbert index-only solve — CGAL if available, else PCA+2D."""
-    if _HAS_CGAL:
-        return solve_hilbert_cgal(zs_slice, y_ref)
-    return solve_hilbert(zs_slice, y_ref, n_bits=12)
+    """Hilbert index-only solve via CGAL."""
+    if not _HAS_CGAL:
+        raise ImportError(
+            "CGAL Hilbert module required. "
+            "Run:  bash permabc/core/build_cgal.sh"
+        )
+    return solve_hilbert_cgal(zs_slice, y_ref)
 
 
 # ===================================================================

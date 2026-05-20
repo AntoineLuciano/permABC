@@ -4,6 +4,8 @@ Extending this framework, we developed a sequential version, \emph{permABC-SMC},
 
 Our theoretical results show that permABC retains the desirable convergence properties of classical ABC algorithms in the small-tolerance regime. Furthermore, numerical experiments highlight the efficiency and stability of permABC in high-dimensional scenarios, as well as its robustness to model misspecification where coordinate-wise approaches like ABC-Gibbs may fail.
 
+\new{We also clarified the connection between permABC and Wasserstein ABC: at the level of compartment-level empirical measures, permABC is a natural hierarchical analogue of WABC, and in the one-dimensional case the two approaches coincide. Asymptotic arguments suggest a WABC-style concentration on the global parameter as \(K \to \infty\), while the over-sampling limit \(M \to \infty\) is a qualitatively different object acting as an algorithmic bridge rather than an inferential target. On the computational side, warm-started swap refinement reduces the amortised cost of the assignment step within SMC from \(\mathcal{O}(K^3)\) to \(\mathcal{O}(K^2)\) per particle.}
+
 
 
 Finally, we demonstrated the practical relevance of our method through an application to COVID-19 epidemic data, using a hierarchical SIR model across 94 departments. This application highlights the practical impact of the permABC: leveraging local heterogeneity leads to sharper inference on global parameters, opening new directions for scalable and robust likelihood-free inference.

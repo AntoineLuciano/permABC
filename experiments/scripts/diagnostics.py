@@ -732,8 +732,15 @@ def _w2_1d_sorted(a, b):
     return float(np.sqrt(np.mean((np.sort(a) - np.sort(b)) ** 2)))
 
 
-def _w2_1d_weighted_vs_unweighted(particles, weights, ref_sorted, n_quantiles=2000):
-    """W2 between weighted empirical and sorted reference samples via quantiles."""
+def _w2_1d_weighted_vs_unweighted(particles, weights, ref_sorted, n_quantiles=None):
+    """W2 between weighted empirical and sorted reference samples via quantiles.
+
+    n_quantiles defaults to 2 * max(len(particles), len(ref_sorted)) to avoid
+    underestimating W2 due to coarse quantile interpolation.
+    """
+    if n_quantiles is None:
+        n_quantiles = 2 * max(len(particles), len(ref_sorted))
+
     order = np.argsort(particles)
     sp = particles[order]
     sw = weights[order]
@@ -809,13 +816,20 @@ def sliced_w2_joint(model, y_obs, thetas, weights=None, perm=None,
     directions = rng_proj.standard_normal((n_projections, dim))
     directions /= np.linalg.norm(directions, axis=1, keepdims=True)
 
+    # Detect uniform weights → use exact sort-diff when sizes match
+    N_valid = len(w)
+    is_uniform = np.allclose(w, 1.0 / N_valid)
+
     sw2_sq = 0.0
     for omega in directions:
         proj_abc = abc_joint @ omega      # (N,)
         proj_ref = ref_joint @ omega      # (n_ref,)
-        proj_ref_sorted = np.sort(proj_ref)
 
-        w2 = _w2_1d_weighted_vs_unweighted(proj_abc, w, proj_ref_sorted)
+        if is_uniform and N_valid == n_ref_samples:
+            w2 = _w2_1d_sorted(proj_abc, proj_ref)
+        else:
+            proj_ref_sorted = np.sort(proj_ref)
+            w2 = _w2_1d_weighted_vs_unweighted(proj_abc, w, proj_ref_sorted)
         sw2_sq += w2 ** 2
 
     sw2_sq /= n_projections

@@ -196,11 +196,11 @@ RESTE A FAIRE :
 
 [PRIORITE 2 — forte valeur ajoutee]
 
-7. **Texte introductif Section 2** (mock review m1)
-   - Ajouter un paragraphe chapeau entre \section{Sequential...} et \subsection{State of the art}.
+7. ~~**Texte introductif Section 2** (mock review m1)~~ FAIT
+   - Paragraphe chapeau ajouté en tête de 2_sequential.tex avec renvois aux sous-sections.
 
-8. **Specifier les hyperparametres du Gaussian toy** (mock review m2)
-   - Donner (a, b, s, n, K) dans le texte ou en legende de figure.
+8. ~~**Specifier les hyperparametres du Gaussian toy** (mock review m2)~~ FAIT
+   - a=b=5, s=10, n=10, K=20 ajoutés après l'équation dans Section 3.2.
 
 9. **Discuter Figure 2 a la lumiere de M->inf** (mock review m3)
    - Pointer explicitement sur la figure le comportement prior-like de beta et la concentration des locaux.
@@ -209,9 +209,8 @@ RESTE A FAIRE :
 10. **Comparaison equilibree avec ABC-Gibbs** (mock review m4)
     - Ajouter un cas ou ABC-Gibbs marche bien (Gaussian toy standard, dependances faibles).
 
-11. **Desambiguer la notation M** (mock review m6)
-    - Section 2.1 : M = nb datasets par parametre. Section 2.3 : M = nb compartiments simules.
-    - Renommer l’un des deux.
+11. ~~**Desambiguer la notation M** (mock review m6)~~ FAIT
+   - M_rep dans Section 2.1 (datasets par paramètre), M réservé à l’Over-Sampling.
 
 12. **Reporter ou utiliser le “unique particle rate”** (mock review m7)
     - Soit l’utiliser dans les experiences, soit supprimer la discussion.

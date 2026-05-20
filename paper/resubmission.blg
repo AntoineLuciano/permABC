@@ -1,46 +1,46 @@
 This is BibTeX, Version 0.99d (TeX Live 2022)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: resubmission.aux
-The style file: plainnat.bst
+The style file: agsm.bst
 Database file #1: permABC.bib
-You've used 25 entries,
-            2773 wiz_defined-function locations,
-            780 strings with 10450 characters,
-and the built_in function-call counts, 13029 in all, are:
-= -- 1206
-> -- 760
-< -- 10
-+ -- 256
-- -- 231
-* -- 1158
-:= -- 2008
-add.period$ -- 98
-call.type$ -- 25
-change.case$ -- 150
-chr.to.int$ -- 25
-cite$ -- 50
-duplicate$ -- 540
-empty$ -- 1030
-format.name$ -- 262
-if$ -- 2708
-int.to.chr$ -- 1
-int.to.str$ -- 1
+You've used 26 entries,
+            2909 wiz_defined-function locations,
+            815 strings with 10390 characters,
+and the built_in function-call counts, 152323 in all, are:
+= -- 25159
+> -- 1997
+< -- 1
++ -- 12240
+- -- 613
+* -- 13558
+:= -- 29773
+add.period$ -- 26
+call.type$ -- 26
+change.case$ -- 364
+chr.to.int$ -- 26
+cite$ -- 26
+duplicate$ -- 444
+empty$ -- 964
+format.name$ -- 696
+if$ -- 27468
+int.to.chr$ -- 5
+int.to.str$ -- 0
 missing$ -- 25
-newline$ -- 154
-num.names$ -- 101
-pop$ -- 260
+newline$ -- 82
+num.names$ -- 281
+pop$ -- 85
 preamble$ -- 1
-purify$ -- 126
+purify$ -- 390
 quote$ -- 0
-skip$ -- 406
+skip$ -- 392
 stack$ -- 0
-substring$ -- 633
-swap$ -- 44
-text.length$ -- 3
+substring$ -- 36166
+swap$ -- 98
+text.length$ -- 365
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 265
+type$ -- 102
 warning$ -- 0
-while$ -- 118
+while$ -- 596
 width$ -- 0
-write$ -- 374
+write$ -- 354

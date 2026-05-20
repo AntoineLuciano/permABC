@@ -1,0 +1,109 @@
+% JASA Supplementary Material — Permutations Accelerate Approximate Bayesian Computation
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+
+\documentclass[12pt]{article}
+
+%%% ---- Packages ----
+\usepackage[]{natbib}
+\bibliographystyle{agsm}
+
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{plain}
+
+\usepackage{lmodern}
+\usepackage{bm}
+\usepackage{bbold}
+\usepackage{graphicx}
+
+\usepackage{tikz}
+\usetikzlibrary{matrix,fit,backgrounds,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\usepackage[ruled,noend]{algorithm2e}
+\usepackage{xcolor}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\makeatletter
+\renewcommand{\algocf@captiontext}[2]{#1\algocf@typo. \AlCapFnt{}#2}
+\renewcommand{\AlTitleFnt}[1]{#1\unskip}
+\def\@algocf@capt@plain{top}
+\renewcommand{\algocf@makecaption}[2]{%
+  \addtolength{\hsize}{\algomargin}%
+  \sbox\@tempboxa{\algocf@captiontext{#1}{#2}}%
+  \ifdim\wd\@tempboxa >\hsize
+    \hskip .5\algomargin%
+    \parbox[t]{\hsize}{\algocf@captiontext{#1}{#2}}%
+  \else
+    \global\@minipagefalse%
+    \hbox to\hsize{\box\@tempboxa}%
+  \fi
+  \addtolength{\hsize}{-\algomargin}%
+}
+\makeatother
+
+%%% ---- JASA margins ----
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.1in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{1.7in}%
+\addtolength{\topmargin}{-1in}
+
+%%% ---- Hyperref ----
+\usepackage{hyperref}
+\hypersetup{
+  pdftitle={Supplementary Material: Permutations Accelerate ABC},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+}
+
+%%% ---- User macros (from main paper) ----
+\input{preamble/defs}
+
+%%% ---- Keep \new{}/\old{} markup for co-author review ----
+\usepackage[normalem]{ulem}
+
+\date{}
+
+%%% ============================================================
+\begin{document}
+
+\def\spacingset#1{\renewcommand{\baselinestretch}%
+{#1}\small\normalsize} \spacingset{1}
+
+\begin{center}
+{\LARGE\bf Supplementary Material for\\[6pt]
+``Permutations Accelerate Approximate Bayesian Computation''}
+\end{center}
+
+\bigskip
+
+\spacingset{1.8}
+
+\setcounter{section}{0}
+\renewcommand{\thesection}{S.\arabic{section}}
+\renewcommand{\theequation}{S.\arabic{equation}}
+\renewcommand{\thefigure}{S.\arabic{figure}}
+\renewcommand{\thetable}{S.\arabic{table}}
+
+\input{sections/5_appendix}
+
+\bibliography{permABC}
+
+\end{document}

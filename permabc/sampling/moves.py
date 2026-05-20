@@ -7,6 +7,7 @@ These moves are the core of the ABC-SMC algorithm progression.
 """
 
 import numpy as np
+import time as _time
 from jax import random
 from ..assignment.dispatch import optimal_index_distance
 from ..utils.functions import Theta
@@ -24,7 +25,9 @@ MoveResult = namedtuple('MoveResult', [
     'zs_index',         # Updated column assignments (None for non-perm)
     'n_lsa',            # Number of LSA problems solved
     'accept_rate',      # Overall acceptance rate
-    'n_simulations'     # Total number of simulations
+    'n_simulations',    # Total number of simulations
+    'abc_reject_rate',  # Fraction rejected by ABC criterion (d >= eps)
+    'mh_reject_rate',   # Fraction rejected by MH ratio (passed ABC but MH rejects)
 ])
 
 # Block Gibbs move result structure
@@ -246,7 +249,12 @@ def move_smc(key, model, thetas, zs, weights, epsilon, y_obs, distance_values, k
         
     n_accept = np.sum(accept)
     accept_rate = n_accept / n_particles
-    
+
+    # Rejection decomposition (always computed)
+    abc_pass = (proposed_distances < epsilon)
+    abc_reject_rate = float(np.mean(~abc_pass))
+    mh_reject_rate = float(np.mean(abc_pass & (accept_prob < uniform_samples)))
+
     # Diagnostic output
     if verbose > 1:
         ploc = np.asarray(proposed_thetas.loc)
@@ -285,14 +293,16 @@ def move_smc(key, model, thetas, zs, weights, epsilon, y_obs, distance_values, k
         zs_index=zs_index,
         n_lsa=n_lsa,
         accept_rate=accept_rate,
-        n_simulations=n_particles * M
+        n_simulations=n_particles * M,
+        abc_reject_rate=abc_reject_rate,
+        mh_reject_rate=mh_reject_rate,
     )
 
 
 def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, distance_values, kernel,
                          ys_index=None, zs_index=None, verbose=1, perm=True, M=0, L=0, H=0,
                          both_loc_glob=True, parallel=False,
-                         cascade=None):
+                         cascade=None, block_cascade=None):
     """
     Block-wise Gibbs Metropolis-Hastings move for ABC-SMC.
     
@@ -381,7 +391,14 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
     if L == 0: L = model.K
     K = model.K
     if H == 0: H = 1
-    
+
+    # Derive block cascade: skip LSA for block updates (swap is sufficient
+    # since blocks only modify a subset of components)
+    if block_cascade is None:
+        block_cascade = [s for s in (cascade or ["identity", "swap", "lsa"]) if s != "lsa"]
+        if not block_cascade:
+            block_cascade = ["identity", "swap"]
+
     # Split random keys — separate keys for global and local data generation
     key, key_kernel, key_data_glob, key_data_loc, key_blocks, key_uniform = random.split(key, 6)
     
@@ -430,10 +447,14 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
         proposed_thetas_glob[glob_update] = proposed_thetas_full
         
         # Simulate data with new global parameters (only glob changed)
+        _t0 = _time.time()
         proposed_zs_glob = zs.copy()
         proposed_zs_glob[glob_update] = model.data_generator(key_data_glob, proposed_thetas_glob[glob_update])
+        if verbose >= 1:
+            print(f"  [timing] Global data gen: {_time.time()-_t0:.1f}s", flush=True)
         
         # Compute distances
+        _t0 = _time.time()
         if perm and K > 1:
             proposed_distances_glob, proposed_ys_index_glob, proposed_zs_index_glob, n_lsa_glob = optimal_index_distance(
                 model=model,
@@ -454,6 +475,9 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
             proposed_ys_index_glob = ys_index[glob_update] if ys_index is not None else None
             proposed_zs_index_glob = zs_index[glob_update] if zs_index is not None else None
         
+        if verbose >= 1:
+            print(f"  [timing] Global assignment: {_time.time()-_t0:.1f}s", flush=True)
+
         # Compute acceptance probability for global update
         backward_kernel_glob = kernel(
             model=model, thetas=proposed_thetas_glob[glob_update], weights=weights[glob_update], 
@@ -511,8 +535,11 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
         proposed_thetas_loc[loc_update] = Theta(loc=loc_src.copy(), glob=glob_fixed.copy())
 
         # Simulate data for local updates — use proposed_thetas_loc (glob fixed!)
+        _t0 = _time.time()
         proposed_zs_loc = zs.copy()
         proposed_zs_loc[loc_update] = model.data_generator(key_data_loc, proposed_thetas_loc[loc_update])
+        if verbose >= 1:
+            print(f"  [timing] Local data gen: {_time.time()-_t0:.1f}s", flush=True)
 
         # Pre-allocate reusable buffers for the block loop (avoid H full copies)
         loc_buf = Theta._ensure_numpy(thetas.loc).copy()   # mutable copy of current loc
@@ -523,6 +550,7 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
 
         # Process each block sequentially
         for h, block_h in enumerate(blocks):
+            _t_block = _time.time()
             if verbose > 1:
                 print(f"   Processing block {h+1}/{len(blocks)} (size: {block_h.shape[1]})...")
 
@@ -538,7 +566,8 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
             zs_buf[loc_update] = zs[loc_update]
             zs_buf[loc_update[:, None], block_h_np] = proposed_zs_loc[loc_update[:, None], block_h_np]
 
-            # Compute distances for block update
+            # Compute distances for block update (uses block_cascade: no LSA fallback)
+            _t0 = _time.time()
             if perm and K > 1:
                 proposed_distances_loc_h, ys_index_loc_h, zs_index_loc_h, n_lsa_loc_h = optimal_index_distance(
                     model=model,
@@ -551,13 +580,16 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
                     M=M,
                     L=L,
                     parallel=parallel,
-                    cascade=cascade,
+                    cascade=block_cascade,
                 )
                 n_lsa += n_lsa_loc_h
             else:
                 proposed_distances_loc_h = np.array(model.distance(zs_buf[loc_update], y_obs))
                 ys_index_loc_h = ys_index[loc_update] if ys_index is not None else None
                 zs_index_loc_h = zs_index[loc_update] if zs_index is not None else None
+
+            if verbose >= 1:
+                print(f"  [timing] Block {h+1}/{len(blocks)} assignment: {_time.time()-_t0:.1f}s", flush=True)
 
             # Compute acceptance probability for block
             forward_kernel_loc_h = kernel(
@@ -598,6 +630,10 @@ def move_smc_gibbs_blocks(key, model, thetas, zs, weights, epsilon, y_obs, dista
             n_accept_local += np.sum(accept_h) * block_h.shape[1]
             n_sim_local += np.sum(block_choice_loc) * block_h.shape[1]
 
+            if verbose >= 1:
+                acc_block = np.sum(accept_h)/max(np.sum(block_choice_loc), 1)
+                print(f"  [timing] Block {h+1}/{len(blocks)} total: {_time.time()-_t_block:.1f}s "
+                      f"(acc={acc_block:.1%})", flush=True)
             if verbose > 1:
                 abc_reject = np.mean(proposed_distances_loc_h >= epsilon)
                 mh_reject = np.mean(np.logical_and(proposed_distances_loc_h < epsilon, accept_prob_h < uniform_h))

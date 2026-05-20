@@ -1,38 +1,147 @@
-\documentclass[11pt,a4paper]{article}
+% JASA template — Permutations Accelerate Approximate Bayesian Computation
+% TEST
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
 
+\documentclass[12pt]{article}
 
-\input{preamble/packages}
+%%% ---- Packages ----
+\usepackage[]{natbib}
+\bibliographystyle{agsm}
+
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{plain}
+
+\usepackage{lmodern}
+\usepackage{bm}
+\usepackage{bbold}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+\usepackage{tikz}
+\usetikzlibrary{matrix,fit,backgrounds,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\usepackage[ruled,noend]{algorithm2e}
+\usepackage{xcolor}
+\usepackage[normalem]{ulem}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\makeatletter
+\renewcommand{\algocf@captiontext}[2]{#1\algocf@typo. \AlCapFnt{}#2}
+\renewcommand{\AlTitleFnt}[1]{#1\unskip}
+\def\@algocf@capt@plain{top}
+\renewcommand{\algocf@makecaption}[2]{%
+  \addtolength{\hsize}{\algomargin}%
+  \sbox\@tempboxa{\algocf@captiontext{#1}{#2}}%
+  \ifdim\wd\@tempboxa >\hsize
+    \hskip .5\algomargin%
+    \parbox[t]{\hsize}{\algocf@captiontext{#1}{#2}}%
+  \else
+    \global\@minipagefalse%
+    \hbox to\hsize{\box\@tempboxa}%
+  \fi
+  \addtolength{\hsize}{-\algomargin}%
+}
+\makeatother
+
+%%% ---- JASA margins ----
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.1in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{1.7in}%
+\addtolength{\topmargin}{-1in}
+
+%%% ---- Hyperref ----
+\usepackage{hyperref}
+\hypersetup{
+  pdftitle={Permutations Accelerate Approximate Bayesian Computation},
+  pdfauthor={A. Luciano; C. Andral; C. P. Robert; R. J. Ryder},
+  pdfkeywords={Approximate Bayesian Computation, Sequential Monte Carlo,
+    Hierarchical models, Permutation-based inference, Likelihood-free methods},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+}
+
+%%% ---- User macros ----
 \input{preamble/defs}
-\title{Permutations Accelerate Approximate Bayesian Computation}
 
-\author[1]{A. LUCIANO}
-\author[1]{C. ANDRAL}
-\author[1]{C. P. ROBERT}
-\author[2]{R. J. RYDER}
+%%% ---- Override: hide \old{} text to test page count ----
+\renewcommand{\old}[1]{}
 
-\affil[1]{CEREMADE, UMR CNRS 7534, Université Paris Dauphine PSL\\
-Place du Maréchal de Lattre de Tassigny, 75016 Paris, France\\
-\texttt{luciano@ceremade.dauphine.fr}, \texttt{andral@ceremade.dauphine.fr}, \texttt{xian@ceremade.dauphine.fr}}
-
-\affil[2]{Department of Mathematics, Imperial College London\\
-South Kensington Campus, London SW7 2AZ, U.K.\\
-\texttt{r.ryder@imperial.ac.uk}}
+%%% ---- Anonymization toggle ----
+% Set \anon to 0 for anonymous version (review), 1 for identified version
+\newcommand{\anon}{1}
 
 \date{}
 
+%%% ============================================================
 \begin{document}
 
-\maketitle
-\linenumbers
+\def\spacingset#1{\renewcommand{\baselinestretch}%
+{#1}\small\normalsize} \spacingset{1}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\if1\anon
+{
+  \title{\bf Permutations Accelerate Approximate Bayesian Computation}
+  \author{
+    A.~Luciano\thanks{
+      Antoine Luciano is supported by a PR[AI]RIE PhD grant.},
+    C.~Andral, and
+    C.~P.~Robert \thanks{
+      Christian P. Robert is also affiliated with the University of Warwick, UK and is funded by the European Union under the GA 101071601, through the 2023-2029 ERC Synergy grant OCEAN and by a PR[AI]RIE chair from the Agence Nationale de la Recherche (ANR-19-P3IA-0001).} \\
+    CEREMADE, UMR CNRS 7534, Universit\'e Paris Dauphine PSL\\[6pt]
+    and \\[6pt]
+    R.~J.~Ryder \\
+    Department of Mathematics, Imperial College London}
+  \maketitle
+} \fi
+
+\if0\anon
+{
+  \bigskip
+  \bigskip
+  \bigskip
+  \begin{center}
+    {\LARGE\bf Permutations Accelerate Approximate Bayesian Computation}
+  \end{center}
+  \medskip
+} \fi
+
+\bigskip
 \begin{abstract}
 \input{sections/abstract}
 \end{abstract}
 
-\paragraph{Keywords.}
-Approximate Bayesian Computation; Sequential Monte Carlo; Hierarchical models;
-Permutation-based inference; Likelihood-free methods; Over-sampling;
-Under-matching; Exchangeability.
+\noindent%
+{\it Keywords:}
+Sequential Monte Carlo; Hierarchical models;
+Permutation-based inference; Likelihood-free methods; Exchangeability
+\vfill
+
+\newpage
+\spacingset{1.8} % DON'T change the spacing!
+
+
+%%% ---- Main text ----
 
 \section*{Introduction}
 \input{sections/0_intro}
@@ -53,9 +162,31 @@ Under-matching; Exchangeability.
 \input{sections/4_conclusion}
 
 
-\bibliography{permABC}
+%%% ---- Back matter ----
 
-\appendix
-\input{sections/5_appendix}
+\section*{Disclosure Statement}
+The authors report there are no competing interests to declare.
+
+\section*{Data Availability Statement}
+All code and data to reproduce the experiments are available at
+\url{https://github.com/aluciano/permABC}.
+
+\bigskip
+\begin{center}
+{\large\bf SUPPLEMENTARY MATERIAL}
+\end{center}
+
+\begin{description}
+\item[Supplementary proofs and details:]
+  Technical proofs, stratified permABC derivations, and additional
+  experimental details. (PDF)
+\item[permABC Python package:]
+  Python package implementing permABC-SMC, Over-Sampling, and
+  Under-Matching, together with all scripts to reproduce the figures
+  in the paper. (GitHub repository)
+\end{description}
+
+
+\bibliography{permABC}
 
 \end{document}

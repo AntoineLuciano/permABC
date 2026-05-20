@@ -3,6 +3,7 @@
 % Basic packages
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
 \usepackage{lmodern}
 \usepackage[a4paper,margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
@@ -16,7 +17,7 @@
 
 % Theorem environments
 \newtheorem{proposition}{Proposition}
-\newtheorem{remark}{Remark}
+\newtheorem{remark}{Remarque}
 \newtheorem{conjecture}{Conjecture}
 \newtheorem{question}{Question}
 
@@ -32,8 +33,15 @@
 \newcommand{\permABC}{\textsc{permABC}}
 \newcommand{\WABC}{\textsc{WABC}}
 
-\title{Notes on New Theoretical Directions for \permABC}
-\author{Working notes for discussion with co-authors}
+% Macros mirrored from preamble/defs.tex so that news.tex compiles standalone.
+\def\obsdata{\mathbf{y}}
+\def\simdata{\mathbf{z}}
+\def\globparam{\beta}
+\def\locparam{\mu}
+\def\param{\boldsymbol{\theta}}
+
+\title{Notes sur les nouvelles directions pour \permABC}
+\author{Notes de travail pour discussion avec les co-auteurs}
 \date{\today}
 
 \begin{document}
@@ -41,67 +49,538 @@
 \maketitle
 
 \begin{abstract}
-These notes collect a possible new theoretical angle for \permABC, centered on its relation to
-Wasserstein ABC and on two asymptotic regimes that appear natural in the hierarchical setting:
-large number of observed compartments $K \to \infty$, and large over-sampling size
-$M \to \infty$. The goal is not to state definitive results yet, but to provide a clean framework
-for discussion, isolate plausible statements, and identify the points that should be formalized in
-future work.
+Ces notes rassemblent un angle théorique possible pour \permABC, centré sur son lien avec
+Wasserstein ABC et sur deux régimes asymptotiques naturels en hiérarchique~:
+grand nombre de compartiments observés $K \to \infty$, et grande taille de sur-échantillonnage
+$M \to \infty$. L'objectif n'est pas de fixer des résultats définitifs, mais de fournir un cadre
+clair pour la discussion, d'isoler des énoncés plausibles, et d'identifier les points à
+formaliser en travail futur.
 \end{abstract}
 
 \tableofcontents
 
-\section{Motivation and purpose of these notes}
+% =====================================================================
+\section{Reviews Biometrika : statut point par point}
+\label{sec:biometrika_status}
 
-The purpose of this short note is to present a possible extension of the current \permABC
-story in a form that can be discussed with co-authors before deciding whether any of it should
-enter the paper.
+Légende~:
+\textcolor{green!55!black}{\textbf{FAIT}} = traité dans la version actuelle de
+\texttt{resubmission.tex}~;
+\textcolor{orange!85!black}{\textbf{PARTIEL}} = partiellement traité (modification textuelle
+seulement, argument heuristique, ou support numérique manquant)~;
+\textcolor{red!70!black}{\textbf{À FAIRE}} = non traité.
 
-The main ideas are the following.
+\subsection*{Rapporteur 1}
+\begin{enumerate}[leftmargin=*]
+    \item \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{L'ABC sur un SIR déterministe n'a
+    pas de sens~; ajouter de la stochasticité.}
+    La Section~3.5 introduit maintenant un bruit multiplicatif log-normal
+    $\delta_k^{(t)} = \delta_k \exp(\sigma\xi_k^{(t)})$ avec $\sigma=0,05$, et explique pourquoi
+    cela rend l'ABC bien posé sur les sorties simulées plutôt que sur la solution de l'EDO.
+    \emph{Manque~:} analyse de sensibilité sur~$\sigma$~; pas de validation sur SIR synthétique.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Les modèles stochastiques cassent le
+    critère d'appariement en grande dimension.} Non discuté.
+    \item \textcolor{green!55!black}{\textbf{FAIT}} --- \emph{Comparer à un ABC-SMC standard avec
+    schedule décroissant de~$\varepsilon$.} La Figure~4 compare explicitement
+    \textbf{ABC-Vanilla, permABC-Vanilla, ABC-SMC, ABC-PMC, et permABC-SMC} (script
+    \texttt{fig4bis\_performance\_comparison\_without\_osum.py}). ABC-SMC et ABC-PMC sans
+    permutation échouent dès $K$ modéré alors que permABC-SMC réussit, ce qui isole le gain
+    propre aux permutations. \emph{À peaufiner~:} une phrase dans le texte autour de Figure~4
+    énonçant explicitement ce constat.
+\end{enumerate}
+
+\subsection*{Rapporteur 2}
+\begin{enumerate}[leftmargin=*]
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Élargir l'idée des permutations à
+    d'autres domaines LFI.} Non fait.
+    \item \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Plus de justification théorique.}
+    Une nouvelle Sec.~2.7 « Perspectives asymptotiques » et un appendice
+    (\texttt{asymptotics.tex}) discutent désormais du point de vue WABC au niveau des
+    compartiments, de la concentration pour $K\to\infty$ sur
+    $\arg\min_\beta W_p(\nu_\beta,\nu_\star)$, et de la non-commutation de la limite $M\to\infty$.
+    Les propositions sont encore heuristiques.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Commentaire sur l'applicabilité plus
+    large des extensions permABC-SMC.} Non ajouté.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Comparaison avec LFI neuronal et
+    bayésien généralisé sur le Gaussian toy.} Non ajouté.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Étendre l'étude de simulation à 3--5
+    modèles, dont des cas LFI.} Non ajouté.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Pousser l'exemple SIR vers des
+    modèles épidémiologiques plus complexes.} Non ajouté.
+\end{enumerate}
+
+\subsection*{Rapporteur 3}
+\begin{enumerate}[leftmargin=*]
+    \item \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Comparer à WABC~; le tri par
+    Hilbert est disponible en multivarié.} De nouveaux paragraphes \texttt{\textbackslash new}
+    en Sec.~1.2 positionnent \permABC\ vs \WABC, listent les approximations de Bernton~et~al.
+    (Sinkhorn, Hilbert, swap), justifient la LSA exacte dans le régime $K$ modéré / dimension
+    non-triviale, et notent qu'en 1D \permABC\ et \WABC\ coïncident.
+    \emph{Manque~:} comparaison numérique LSA / Hilbert / Sinkhorn sur le toy.
+    \item \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Théorème~1 limité à
+    $\varepsilon\to0$~; envisager $n\to\infty$ ou concentration bayésienne en Wasserstein.} Le
+    nouveau matériel asymptotique traite $K\to\infty$ et $M\to\infty$ de manière heuristique.
+    Le régime $n\to\infty$ n'est pas traité~; pas de borne TV à $\varepsilon$ fini entre
+    $\pi_\varepsilon^*$ et $\pi_\varepsilon$.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{La condition $\varepsilon<\varepsilon^*$
+    est difficile à atteindre en pratique.} Non discuté~; pas de recommandation quand
+    $\varepsilon\geq\varepsilon^*$.
+    \item \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Figure~2 contre-intuitive
+    (prior plus large que l'approximation a posteriori à $M=K$)~; clarifier.} Aujourd'hui la
+    Figure~2 a été refaite sur le Gaussian toy canonique avec $K=10$ et $M\in\{10,\dots,250\}$,
+    et la légende a été étendue pour décrire explicitement les deux effets asymptotiques
+    (marginale de $\sigma^2$ prior-like, marginale de $\mu_1$ concentrée) quand $M$ croît, en
+    lien avec l'équation~\eqref{eq:os_pushforward_limit}. \emph{Manque~:} un court paragraphe
+    de lecture de la figure dans le texte~; les hyperparamètres ne sont toujours pas donnés dans
+    le texte.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Utiliser un toy normal--normal en
+    forme close pour discuter le rôle de $M$.} Non ajouté.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Contraster avec
+    \cite*{bornn2017use} sur le rôle de $M$ en ABC de rejet.} Non ajouté.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Clarifier l'initialisation de
+    permABC-OS à budget fixe~; les propositions par importance aideraient-elles ?} Non discuté.
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Comparaison numérique avec la
+    distance de Wasserstein.} Non ajouté.
+\end{enumerate}
+
+\subsection*{Éditeur associé}
+Résume R1--R3. Pas de demande supplémentaire.
+
+\subsection*{Éditeur}
+\begin{enumerate}[leftmargin=*]
+    \item \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Étendre le Lemme~1 et le Théorème~1
+    au cas d'ex\ae quo~; définir $\varepsilon^*$ comme la moitié de la distance minimale entre
+    observations distinctes, et montrer que le cardinal des appariements acceptés est alors
+    constant.} Non fait.
+\end{enumerate}
+
+% =====================================================================
+\section{Mock review JASA et autres demandes : statut point par point}
+\label{sec:jasa_status}
+
+\subsection*{Préoccupations majeures}
+\begin{enumerate}[leftmargin=*]
+    \item[\textbf{M1.}] \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Utiliser des
+    métriques de qualité postérieure au-delà de $\varepsilon$ (KL, $W_2$, couverture).} Les
+    Figures~4 et~6 reportent désormais la distance Wasserstein-2 tranchée entre le nuage de
+    particules et une posterior de référence obtenue par MCMC long sur le Gaussian toy
+    (justification et références en Sec.~\ref{sec:news_fig_and_sw2}). \emph{Manque~:} les deux
+    pickles \texttt{outliers\_4} restent à retraiter~; idem couverture et KL marginale.
+    \item[\textbf{M2.}] \textcolor{green!55!black}{\textbf{FAIT}} --- \emph{Ajouter une baseline
+    ABC-SMC standard sans permutations.} La Figure~4 contient \emph{à la fois} ABC-SMC et
+    ABC-PMC sans permutation, ainsi que ABC-Vanilla, permABC-Vanilla et permABC-SMC. Les
+    baselines sans permutation échouent dès $K$ modéré~: le gain est donc directement
+    attribuable aux permutations, pas au framework SMC. \emph{À peaufiner~:} une phrase dans le
+    texte autour de Fig~4 rendant ce constat explicite.
+    \item[\textbf{M3.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Le Théorème~1 dit peu
+    à $\varepsilon$ fini~; donner une borne TV à $\varepsilon$ fini ou atténuer le discours.} La
+    phrase « at no cost to theoretical consistency » est encore en Sec.~1.4.
+    \item[\textbf{M4.}] \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Formaliser les
+    résultats $M\to\infty$ ou intégrer le matériel asymptotique existant.} Une courte Sec.~2.7
+    dans le corps du papier et un appendice complet (\texttt{asymptotics.tex}) sont maintenant
+    inclus. Les énoncés restent étiquetés « heuristiques ».
+    \item[\textbf{M5.}] \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Le SIR est une
+    preuve de concept, pas une validation.} Seuls le bruit log-normal et le paragraphe de réserve
+    sont en place. Pas d'expérience synthétique à vérité terrain connue, pas de sensibilité
+    sur~$\sigma$, pas de comparaison à une baseline.
+    \item[\textbf{M6.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Comparaison numérique
+    avec WABC (Hilbert/Sinkhorn).} Comparaison uniquement textuelle.
+    \item[\textbf{M7.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Étendre Lemme~1 /
+    Théorème~1 aux ex\ae quo.} (Demandé aussi par l'éditeur Biometrika.)
+    \item[\textbf{M8.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Élargir le benchmark
+    LFI (méthodes neuronales, bayésien généralisé).} Non fait.
+\end{enumerate}
+
+\subsection*{Préoccupations mineures}
+\begin{enumerate}[leftmargin=*]
+    \item[\textbf{m1.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Paragraphe
+    introductif en tête de Section~2.} Non ajouté.
+    \item[\textbf{m2.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Donner les
+    hyperparamètres du Gaussian toy $(a,b,s,n,K)$.} Non ajouté.
+    \item[\textbf{m3.}] \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Discuter la
+    Figure~2 à la lumière de l'analyse $M\to\infty$.} La nouvelle légende le fait explicitement~;
+    le paragraphe du corps du texte ne conduit pas encore le lecteur à travers la figure.
+    \item[\textbf{m4.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Montrer un cas où
+    ABC-Gibbs fonctionne bien.} Non ajouté.
+    \item[\textbf{m5.}] \textcolor{gray}{\textbf{N/A}} --- \emph{Retirer le markup de suivi de
+    modifications avant soumission.} Gardé intentionnellement pour ce tour~; sera résolu juste
+    avant soumission.
+    \item[\textbf{m6.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Désambiguïser la
+    notation $M$ (jeux de données vs.\ compartiments).} Non renommé.
+    \item[\textbf{m7.}] \textcolor{red!70!black}{\textbf{À FAIRE}} --- \emph{Taux de particules
+    uniques~: utiliser ou supprimer.} Encore proposé en Sec.~2.1, toujours inutilisé.
+    \item[\textbf{m8.}] \textcolor{orange!85!black}{\textbf{PARTIEL}} --- \emph{Benchmarker le
+    coût de l'assignment.} Le gain $\mathcal{O}(K^2)$ par swap à chaud de la nouvelle Sec.~2.3
+    est textuel~; un benchmark quantitatif vs.\ LSA exact est manquant.
+    \item[\textbf{m9--m12.}] Ajoutés lors de la dernière session et tous
+    \textcolor{red!70!black}{\textbf{À FAIRE}}~: reporter les hyperparamètres du Gaussian toy,
+    clarifier l'initialisation de \permABC-OS à budget fixé, discuter le rôle de $\varepsilon^*$
+    en pratique, passer à des modèles épidémiologiques plus complexes.
+\end{enumerate}
+
+\subsection*{Autres demandes non couvertes par les listes}
+\begin{enumerate}[leftmargin=*]
+    \item \textcolor{green!55!black}{\textbf{FAIT}} --- \emph{Rendre explicite le lien entre
+    \permABC\ et \WABC\ dans le texte principal.} Nouveaux paragraphes
+    \texttt{\textbackslash new} en Sec.~1.2, phrase de clôture dans l'abstract et la conclusion.
+    \item \textcolor{green!55!black}{\textbf{FAIT}} --- \emph{Donner un récit asymptotique propre
+    pour $M\to\infty$ dans le papier.} Sec.~2.3 pushforward + limite $M\to\infty$ formelle,
+    Sec.~2.7 synthèse, appendice \texttt{asymptotics.tex}.
+    \item \textcolor{green!55!black}{\textbf{FAIT}} --- \emph{Accélérer l'étape d'assignment en
+    SMC.} Sec.~2.3 « Fast assignment via warm-started swaps » (nouvelle sous-section).
+    \item \textcolor{green!55!black}{\textbf{FAIT}} --- \emph{Remplacer $\varepsilon$-vs-coût par
+    qualité-postérieure-vs-coût dans les benchmarks principaux.} Les Figures~4 et~6 utilisent
+    maintenant $\mathrm{SW}_2$.
+\end{enumerate}
+
+\section{Motivation et objet de ces notes}
+
+L'objet de cette note courte est de présenter une extension possible de l'histoire \permABC\
+actuelle sous une forme qui puisse être discutée avec les co-auteurs avant de décider si une
+partie de ce matériel doit entrer dans le papier.
+
+Les idées principales sont les suivantes.
 \begin{enumerate}[label=(\arabic*)]
-    \item \permABC can be viewed as a hierarchical analogue of \WABC at the level of
-    empirical distributions of \emph{compartments}.
-    \item This suggests a natural asymptotic regime when the number of compartments
+    \item \permABC\ peut être vu comme un analogue hiérarchique de \WABC\ au niveau des
+    distributions empiriques des \emph{compartiments}.
+    \item Cela suggère un régime asymptotique naturel quand le nombre de compartiments
     $K \to \infty$.
-    \item The over-sampling bridge $M > K$ has a qualitatively different asymptotic behaviour:
-    for large $M$, the global marginal tends to become prior-like, whereas the matched local
-    variables become extreme-value / best-match objects, often nearly Dirac.
+    \item Le pont de sur-échantillonnage $M > K$ a un comportement asymptotique qualitativement
+    différent~: pour $M$ grand, la marginale globale tend à redevenir prior-like, tandis que les
+    variables locales appariées deviennent des objets de type valeur extrême / meilleur
+    appariement, souvent quasi-Dirac.
 \end{enumerate}
 
-The point of these notes is therefore to organize these observations into a coherent narrative and
-make explicit which parts seem rigorous, which parts are currently heuristic, and which questions
-could realistically be turned into formal results.
+Le but de ces notes est donc d'organiser ces observations en un récit cohérent et d'expliciter
+quelles parties semblent rigoureuses, quelles parties sont heuristiques pour l'instant, et
+quelles questions peuvent réalistement être converties en résultats formels.
 
-\input{sections/asymptotics.tex}
+\section{Résumé asymptotique (condensé de \texttt{asymptotics.tex})}
+\label{sec:asympt_short}
 
-\section{Practical discussion points for co-authors}
+On note $\widehat\nu_y^K = \tfrac1K\sum_k \delta_{y_k}$ et $\widehat\nu_z^K = \tfrac1K\sum_k \delta_{z_k}$ les
+mesures empiriques des compartiments. Avec un coût induit
+$d_K(y,z)^p = \tfrac1K\sum_k \rho(y_k,z_k)^p$, on a l'identité clé
+\[
+  \min_{\sigma\in S_K} d_K(y,z_\sigma) \;=\; W_p\bigl(\widehat\nu_y^K,\widehat\nu_z^K\bigr).
+\]
+Donc, au niveau des distributions empiriques de compartiments, \permABC\ \emph{est} WABC appliqué
+à la mesure empirique des compartiments~; la différence tient à la projection, qui garde en plus
+l'étiquetage des locaux optimalement appariés. Ceci fournit un « dictionnaire WABC » naturel pour
+la pseudo-postérieure permutation-invariante $\tilde\pi_\varepsilon$.
 
-At this stage, the most useful questions for discussion seem to be:
+\paragraph{Limite $K\to\infty$ (heuristique).} Soit $\nu_\beta$ la loi marginale d'un compartiment sous
+le modèle et $\nu_\star$ sa limite sous le vrai mécanisme. Si $\widehat\nu_y^K\Rightarrow\nu_\star$
+et $\widehat\nu_z^K\Rightarrow\nu_\beta$, alors l'événement d'acceptation devient
+asymptotiquement équivalent à $W_p(\nu_\beta,\nu_\star)\le\varepsilon_K$. Pour $\varepsilon_K\to0$
+assez lentement, on attend une concentration de type WABC sur
+\[
+  \beta^\star \in \arg\min_\beta W_p(\nu_\beta,\nu_\star).
+\]
+C'est un énoncé sur $\beta$, pas sur le vecteur étiqueté $\mu_{1:K}$~: le transport par
+permutations \emph{oublie} les labels des locaux.
+
+\paragraph{Limite $M\to\infty$ à $K$ fixé (heuristique, non-commutation).} Sous
+sur-échantillonnage, la probabilité d'acceptation tend vers $1$ quand $M$ croît, donc la marginale
+non projetée se relaxe vers le prior~:
+\[
+  \tilde\pi_\varepsilon^{M}(\mathrm d\beta\mid y)\;\longrightarrow\;\pi_\beta(\mathrm d\beta).
+\]
+En revanche, les locaux \emph{projetés} se concentrent en mécanisme de valeur extrême sur les
+meilleurs candidats parmi $M$~: si $\mu\mapsto c_\beta(y_k,\mu)$ admet un unique minimiseur
+$\mu_k^\dagger(\beta,y_k)$, alors $\mu_k^{\star,M}\Rightarrow\delta_{\mu_k^\dagger(\beta,y_k)}$.
+
+\paragraph{Conséquence pratique.} La cible inférentielle est bien à $M=K$. Le sur-échantillonnage
+$M>K$ est un \emph{pont algorithmique}~: le sens statistique n'est retrouvé qu'au bout du schedule
+$M_0>M_1>\dots>M_T=K$. C'est aussi ce que la nouvelle Figure~2 rend visible.
+
+\paragraph{Questions ouvertes (pour le meeting).}
+\begin{itemize}[nosep]
+    \item Preuve complète de concentration WABC-style pour $\beta$ sous $K\to\infty$ avec taux
+    explicites ?
+    \item Régime joint $K\to\infty$, $M\to\infty$ avec $M/K\to c>1$ : que devient-on ?
+    \item Caractérisation de la limite des locaux projetés comme carte de transport ou couplage
+    de Monge ?
+    \item Énoncer l'asymptotique grand-$K$ uniquement sur $\beta$ (laisser les $\mu_{1:K}$ hors du
+    théorème principal) ?
+\end{itemize}
+
+\section{Mise à jour numérique : nouvelle Figure~2, et passage des Figures~4 et~6 à la Wasserstein-2 tranchée}
+\label{sec:news_fig_and_sw2}
+
+Trois modifications numériques ont été apportées au papier pendant la session d'édition du
+16~avril~2026. Il vaut la peine de les signaler explicitement, avec leur justification et
+leur support bibliographique, pour que la logique survive aux futures éditions du corps du texte.
+
+\subsection{Nouvelle Figure~2 : marginales pushforward sous Over-Sampling}
+
+\paragraph{Ce qui a changé.} La version précédente de la Figure~2 traçait la pseudo-postérieure
+Over-Sampling $\pi_\varepsilon^{*M}$ sur un Gaussian toy avec paramètre global $\beta$ et
+$M \in \{10,\dots,100\}$. La nouvelle version utilise le Gaussian toy canonique de la
+Section~3.2 du papier principal --- variance globale $\sigma^2 \sim \mathrm{IG}(a,b)$, moyennes
+locales $\mu_k \sim \mathcal N(0, s^2)$, $K=10$ compartiments --- et fait varier $M$ sur
+$\{10, 15, 20, 50, 100, 250\}$. Avec $M=K=10$ (violet) la figure retrouve la pseudo-postérieure
+\permABC\ standard~; avec $M=250$ (jaune) elle visualise le régime de la limite pushforward.
+
+\paragraph{Pourquoi c'est important.} La nouvelle figure est le pendant numérique de
+l'équation~\eqref{eq:os_pushforward_limit}, introduite pendant la révision JASA. Elle rend
+deux effets visibles sur le même panneau~:
+\begin{itemize}[nosep]
+    \item la marginale sur le paramètre global $\sigma^2$ s'aplatit vers le prior quand $M$
+    croît, en ligne avec le résultat de dégénérescence que nous prouvons maintenant
+    asymptotiquement~;
+    \item la marginale sur le paramètre local $\mu_1$ \emph{se concentre} quand $M$ croît, parce
+    que la permutation partielle optimale $\sigma^*$ sélectionne la composante simulée la mieux
+    appariée parmi $M$ candidates.
+\end{itemize}
+Cette séparation nette des comportements asymptotiques global/local est exactement ce que la
+Figure~2 devait faire passer, et ce n'était pas lisible sur la version précédente.
+
+\subsection{Passage des Figures~4 et~6 à la Wasserstein-2 tranchée}
+
+\paragraph{Ce qui a changé.} Les Figures~4 et~6 du papier principal reportaient auparavant la
+tolérance ABC effective $\varepsilon$ atteinte à un budget de calcul donné. Elles reportent
+maintenant la \emph{distance Wasserstein-2 tranchée} $\mathrm{SW}_2$ entre le nuage pondéré de
+particules produit par chaque algorithme et une postérieure de référence obtenue par MCMC long
+(PyMC) sur le Gaussian toy. Les versions $\varepsilon$ et les doubles axes $N_{\mathrm{sim}}$ /
+temps sont déplacés dans l'appendice numérique.
+
+\paragraph{Pourquoi $\varepsilon$ seul ne suffit pas.} C'est le point le plus fort soulevé par
+les rapporteurs de la mock-JASA~: la tolérance $\varepsilon$ est une quantité
+\emph{algorithmique}, pas une mesure de qualité postérieure. Deux méthodes qui ciblent des
+pseudo-postérieures différentes ne peuvent pas être comparées sur $\varepsilon$ seul~; de plus,
+le critère d'acceptation de \permABC\ est un infimum sur les permutations, donc un $\varepsilon$
+plus petit pour \permABC\ ne se traduit pas mécaniquement par une meilleure approximation
+postérieure qu'un concurrent de $\varepsilon$ comparable. Reporter la distance réelle à la
+postérieure boucle la boucle.
+
+\paragraph{Pourquoi $\mathrm{SW}_2$ plutôt que les alternatives.}
+\begin{itemize}[nosep]
+    \item \emph{Divergence de Kullback empirique.} Exige une estimation de densité dans l'espace
+    augmenté par les compartiments, souffre d'artefacts de discrétisation en dimension
+    $\gtrsim 5$, et est asymétrique (il faut choisir entre $\mathrm{KL}(\pi^{\mathrm{ABC}}\Vert\pi)$
+    et $\mathrm{KL}(\pi\Vert\pi^{\mathrm{ABC}})$, les deux versions étant mal conditionnées dès
+    que les supports diffèrent légèrement). Sur le toy hiérarchique à $K=20$, l'étape
+    d'estimation de densité domine déjà la variabilité de l'estimateur, ce qui masque le signal
+    qu'on cherche à mesurer.
+    \item \emph{Wasserstein-2 exacte.} En dimension jointe $K+1$ déjà non triviale ($K=20$ donne
+    un transport en dimension $21$), et le coût de l'estimation Monte Carlo par Sinkhorn à chaque
+    point du benchmark est comparable au coût de l'algorithme ABC lui-même.
+    \item \emph{Wasserstein-2 tranchée (notre choix).} Estimateur Monte Carlo en temps linéaire
+    en la dimension ambiante, métrise la convergence faible sur $\mathbb R^{d}$, possède des
+    garanties statistiques précises, et a été explicitement introduite comme divergence ABC par
+    Nadjahi~et~al.~\cite{nadjahi2020approximate}.
+\end{itemize}
+
+\paragraph{Support bibliographique pour $\mathrm{SW}_2$.} Définition moderne et barycentres~:
+Bonneel~et~al.~\cite{bonneel2015sliced}~; métrisation de la convergence faible et propriétés
+statistiques~: Nadjahi~et~al.~\cite{nadjahi2020statistical}~; usage comme divergence ABC~:
+Nadjahi~et~al.~\cite{nadjahi2020approximate}. Côté données, l'article de référence reste
+Bernton~et~al.~\cite{bernton2019approximate} (WABC) dont notre $\mathrm{SW}_2$ côté postérieur
+est le pendant. On utilise $n_{\mathrm{proj}}=200$ projections i.i.d.\ via POT.
+
+\paragraph{Portée honnête.} $\mathrm{SW}_2$ ne détecte pas avec forte probabilité un désalignement
+de modes orthogonal à toutes les directions de projection échantillonnées~; en grande dimension
+le coût d'échantillonnage des projections grandit. Dans notre benchmark ($d \le K+1 = 21$) ce
+n'est pas un problème, mais nous l'énonçons explicitement pour qu'un lecteur adversaire ne puisse
+pas nous accuser de survendre la métrique.
+
+\subsection{Bénéfice en présence d'outliers pour Under-Matching}
+
+Le passage à $\mathrm{SW}_2$ permet de quantifier un effet qui n'était qu'anecdotique dans la
+version $\varepsilon$. Sur le toy avec $K\in\{10,15,20\}$ et $K_{\mathrm{out}}\in\{0,\dots,5\}$,
+une régression linéaire sur $\log(\text{ratio de }\mathrm{SW}_2\text{ de permABC-UM vs.
+permABC-SMC})$ contre le nombre d'outliers donne des pentes de $-0,12$ à $-0,16$ par outlier,
+avec le ratio à $o=5$ typiquement la moitié du ratio à $o=1$. Cela complète, et est cohérent
+avec, la description asymptotique d'Under-Matching en Section~2 du papier.
+
+\begin{thebibliography}{9}
+\bibitem{bonneel2015sliced}
+N.~Bonneel, J.~Rabin, G.~Peyr\'e and H.~Pfister,
+\emph{Sliced and Radon Wasserstein barycenters of measures},
+J.\ Math.\ Imaging Vis., 51(1):22--45, 2015.
+\bibitem{nadjahi2020statistical}
+K.~Nadjahi \emph{et al.},
+\emph{Statistical and topological properties of sliced probability divergences},
+NeurIPS, 2020.
+\bibitem{nadjahi2020approximate}
+K.~Nadjahi \emph{et al.},
+\emph{Approximate Bayesian computation with the sliced-Wasserstein distance},
+ICASSP, 2020.
+\bibitem{bernton2019approximate}
+E.~Bernton, P.~E.~Jacob, M.~Gerber and C.~P.~Robert,
+\emph{Approximate Bayesian computation with the Wasserstein distance},
+JRSS~B, 81(2):235--269, 2019.
+\end{thebibliography}
+
+\section{Points de discussion pratiques pour les co-auteurs}
+
+À ce stade, les questions les plus utiles pour la discussion semblent être~:
 \begin{enumerate}[label=(\arabic*)]
-    \item Should the $K \to \infty$ discussion appear in the main paper, the supplement, or only
-    in internal notes for now?
-    \item Do we want to state the large-$K$ argument only for the global parameter $\beta$,
-    leaving the local parameters $\mu_{1:K}$ explicitly outside the main theorem?
-    \item Do we want to include a formal proposition explaining why large-$M$ over-sampling is
-    not an inferential target, but only an algorithmic bridge?
-    \item Would it be worth adding a simple toy example in which the large-$M$ behaviour can be
-    shown analytically, e.g. a deterministic or Gaussian local model?
-    \item Is there a clean way to phrase the projected local variables as transport witnesses,
-    selected latent explanations, or approximate Monge matches?
+    \item La discussion $K \to \infty$ doit-elle apparaître dans le corps du papier, dans le
+    supplément, ou seulement dans des notes internes pour l'instant ?
+    \item Voulons-nous énoncer l'argument grand-$K$ uniquement pour le paramètre global $\beta$,
+    en laissant les paramètres locaux $\mu_{1:K}$ explicitement hors du théorème principal ?
+    \item Voulons-nous inclure une proposition formelle expliquant pourquoi le
+    sur-échantillonnage grand-$M$ n'est pas une cible inférentielle mais seulement un pont
+    algorithmique ?
+    \item Vaudrait-il la peine d'ajouter un petit exemple-jouet où le comportement grand-$M$
+    peut être montré analytiquement, par ex.\ un modèle local déterministe ou gaussien ?
+    \item Y a-t-il une manière nette de formuler les variables locales projetées comme témoins
+    de transport, explications latentes sélectionnées, ou appariements de Monge approchés ?
 \end{enumerate}
 
-\section{Suggested next steps}
+\section{Prochaines étapes suggérées}
 
-A possible sequence of next steps would be:
+Un enchaînement possible des prochaines étapes~:
 \begin{enumerate}[label=(\arabic*)]
-    \item Clean the notation so that the WABC comparison uses exactly the same symbols as the
-    current paper.
-    \item Decide which parts are intended as theorem/proposition material and which parts should
-    remain discussion/conjecture.
-    \item Build one toy model where the $M \to \infty$ phenomenon is explicit.
-    \item If the co-authors agree, turn the large-$K$ part into a concise proposition linked to the
-    WABC literature.
+    \item Nettoyer la notation pour que la comparaison WABC utilise exactement les mêmes
+    symboles que le papier actuel.
+    \item Décider quelles parties sont destinées à être du matériel théorème/proposition et
+    quelles parties doivent rester en discussion/conjecture.
+    \item Construire un toy où le phénomène $M \to \infty$ est explicite.
+    \item Si les co-auteurs sont d'accord, transformer la partie grand-$K$ en une proposition
+    concise liée à la littérature WABC.
 \end{enumerate}
+
+\iffalse
+\section{Inventaire des modifications suivies dans \texttt{resubmission.tex}}
+\label{sec:tracked_changes}
+
+Cette section liste tous les \texttt{\textbackslash new\{\}} et \texttt{\textbackslash old\{\}}
+actuellement présents dans le manuscrit, groupés par fichier. Bleu = \texttt{\textbackslash new\{\}}
+(ajouté), rouge barré = \texttt{\textbackslash old\{\}} (suppression en attente). Un bloc est
+marqué « aujourd'hui » quand il a été introduit pendant la session d'édition du 16~avril~2026~;
+les autres blocs étaient déjà présents dans la version précédente et sont gardés pour
+traçabilité.
+
+\paragraph{Préambule.}
+\begin{itemize}[nosep]
+    \item \texttt{preamble/defs.tex}~: redéfinition de \texttt{\textbackslash new} de
+    \texttt{\textbackslash textcolor\{blue\}\{\#1\}} vers \texttt{\{\textbackslash color\{blue\}\#1\}}
+    pour que \texttt{\textbackslash new\{\ldots\}} puisse s'étendre sur plusieurs paragraphes
+    et contenir des équations en mode display. \textit{(aujourd'hui)}
+    \item \texttt{preamble/packages.tex}~: ajout des environnements \texttt{proposition} et
+    \texttt{remark}, requis par l'appendice asymptotique. \textit{(aujourd'hui)}
+\end{itemize}
+
+\paragraph{Abstract (\texttt{sections/abstract.tex}).}
+\begin{itemize}[nosep]
+    \item \texttt{\textbackslash new}~: une phrase mentionnant le lien WABC et le comportement
+    asymptotique quand $K$ ou $M$ croît. \textit{(aujourd'hui)}
+\end{itemize}
+
+\paragraph{Section 1 (\texttt{sections/1\_abc\_to\_perm.tex}).}
+\begin{itemize}[nosep]
+    \item \texttt{\textbackslash old}~: « This reduces the effective complexity from $K!$
+    permutations to a canonical representation\ldots » (l.\,55, version précédente).
+    \item \texttt{\textbackslash new}~: court paragraphe-pont rappelant qu'en univarié le tri
+    coïncide avec la distance de Wasserstein entre mesures empiriques, donc \permABC\ et
+    \WABC\ coïncident dans ce régime. \textit{(aujourd'hui)}
+    \item \texttt{\textbackslash new}~: bloc existant positionnant \permABC\ par rapport à
+    \WABC\ (global vs.\ hiérarchique, nuage non ordonné vs.\ compartiments avec locaux à
+    renommage près).
+    \item \texttt{\textbackslash new}~: bloc existant comparant les approximations de Sinkhorn,
+    Hilbert et greedy-swap de Bernton~et~al.~; avec une phrase \texttt{\textbackslash new}
+    supplémentaire \textit{(aujourd'hui)} renvoyant au schéma de swap à chaud de la Section~2.3.
+    \item \texttt{\textbackslash old}~: « As a result, we cannot rely on sorting to minimize
+    $d(y,z_\sigma)$ in general\ldots » (l.\,63, version précédente).
+\end{itemize}
+
+\paragraph{Section 2 (\texttt{sections/2\_sequential.tex}).}
+\begin{itemize}[nosep]
+    \item \texttt{\textbackslash new}~: formalisme pushforward pour Over-Sampling
+    ($\Psi_{\mathbf{y}}^{(M)}$, représentation pushforward de $\pi_\varepsilon^{*M}$) en
+    Section~2.3 (version précédente).
+    \item \texttt{\textbackslash old}~: paragraphe informel préexistant sur le comportement
+    contrasté des marginales $\beta$ et $\mu$ quand $M$ varie (maintenant remplacé par
+    l'analyse grand-$M$ formelle ci-dessous).
+    \item \texttt{\textbackslash new}~: analyse grand-$M$ de la pseudo-postérieure non projetée
+    ($d_M \to \delta_\beta$ p.s., $\tilde\pi_\varepsilon^M(\beta\mid y) \to \pi(\beta)$), avec
+    retour à la Figure~\ref{fig:os} (version précédente, étendue durant la dernière session).
+    \item \texttt{\textbackslash new}~: \textbf{nouvelle Sous-section~2.3 \emph{Fast assignment
+    via warm-started swaps}}. Introduit la stratégie de warm-start depuis la permutation optimale
+    de l'itération précédente, argumente qu'un rafinement par swap à $\mathcal{O}(K^2)$ par
+    passe suffit typiquement dans une boucle SMC, et réduit le coût amorti de
+    $\mathcal{O}(K^3)$ à $\mathcal{O}(K^2)$. \textit{(aujourd'hui)}
+    \item \texttt{\textbackslash new}~: \textbf{nouvelle Sous-section~2.7 \emph{Asymptotic
+    perspectives}}. Court résumé dans le corps du texte de (i) le point de vue WABC au niveau des
+    compartiments, (ii) la concentration pour $K\to\infty$ sur les minimiseurs de
+    $\beta \mapsto W_p(\nu_\beta,\nu_\star)$, (iii) la non-commutation $M\to\infty$, avec un
+    pointeur vers le nouvel appendice. \textit{(aujourd'hui)}
+    \item Paire \texttt{\textbackslash old}~/~\texttt{\textbackslash new} dans la légende de
+    Figure~\ref{fig:os}~: l'ancienne légende (« $M$ décroissant de $150$ à $K=10$ ») est
+    remplacée par une légende plus informative liant la figure à l'analyse grand-$M$
+    (équation~\eqref{eq:os_pushforward_limit}).
+\end{itemize}
+
+\paragraph{Section 3 (\texttt{sections/3\_numerical.tex}).}
+\begin{itemize}[nosep]
+    \item \texttt{\textbackslash new}~: paragraphe de justification ouvrant le benchmark Gaussian
+    toy, introduisant la distance Wasserstein-2 tranchée comme métrique directe de qualité
+    postérieure et citant~\cite{bonneel2015sliced,nadjahi2020statistical,nadjahi2020approximate}.
+    \textit{(aujourd'hui)}
+    \item Paire \texttt{\textbackslash old}~/~\texttt{\textbackslash new} sur le paragraphe
+    décrivant la Figure~4~: l'ancienne version reportait le gain d'efficacité en termes de
+    $\varepsilon$~; la nouvelle le reporte en termes de $\mathrm{SW}_2$ entre le nuage de
+    particules et la postérieure de référence, et renvoie explicitement à la version $\varepsilon$
+    en appendice. \textit{(aujourd'hui)}
+    \item Paire \texttt{\textbackslash old}~/~\texttt{\textbackslash new} sur
+    \texttt{\textbackslash includegraphics} et la légende de Figure~\ref{fig:vanilla_vs_smc}~: le
+    fichier figure est maintenant \texttt{fig4\_sw2\_nsim\_seed\_42.pdf} (SW$_2$ vs
+    $N_{\mathrm{sim}}$) au lieu de la version $\varepsilon$ précédente. \textit{(aujourd'hui)}
+    \item Paire \texttt{\textbackslash old}~/~\texttt{\textbackslash new} sur les trois
+    paragraphes décrivant la Figure~6 (benchmark OS/UM avec outliers)~: passage à
+    $\mathrm{SW}_2$, et le paragraphe UM est augmenté d'un énoncé quantitatif sur le gain
+    log-linéaire en nombre d'outliers (pentes $-0,12$ à $-0,16$ par outlier pour
+    $K\in\{10,15,20\}$). \textit{(aujourd'hui)}
+    \item Paire \texttt{\textbackslash old}~/~\texttt{\textbackslash new} sur
+    \texttt{\textbackslash includegraphics} et la légende de Figure~\ref{fig:osum}~: le fichier
+    figure est maintenant \texttt{fig6\_sw2\_time\_seed\_42.pdf} (SW$_2$ vs temps).
+    \textit{(aujourd'hui)}
+    \item Le paragraphe de bruit stochastique SIR ($\delta_k^{(t)} = \delta_k \exp(\sigma\xi_k^{(t)})$,
+    $\sigma=0,05$) introduit lors de la révision précédente reste sans markup.
+\end{itemize}
+
+\paragraph{Section 4 (\texttt{sections/4\_conclusion.tex}).}
+\begin{itemize}[nosep]
+    \item \texttt{\textbackslash new}~: paragraphe de clôture résumant le lien WABC, les limites
+    $K\to\infty$ et $M\to\infty$, et la réduction de coût par swap à chaud. \textit{(aujourd'hui)}
+\end{itemize}
+
+\paragraph{Appendice (\texttt{sections/5\_appendix.tex}).}
+\begin{itemize}[nosep]
+    \item \texttt{\textbackslash new}~: inclusion complète de \texttt{sections/asymptotics.tex}
+    via \texttt{\textbackslash input}, transformant les notes de travail en une vraie section
+    d'appendice « Liens asymptotiques avec Wasserstein ABC ». Nécessite les nouveaux
+    environnements \texttt{proposition} et \texttt{remark} ajoutés au préambule.
+    \textit{(aujourd'hui)}
+\end{itemize}
+
+\paragraph{Éléments ouverts nécessitant une décision accepter/rejeter avant soumission.}
+\begin{itemize}[nosep]
+    \item Les deux blocs \texttt{\textbackslash old} de Section~1.2 (tri-comme-représentation
+    canonique, et « cannot rely on sorting » en multivarié) paraissent redondants une fois le
+    matériel WABC/Hilbert en place. Recommandation par défaut~: accepter leur suppression.
+    \item Le paragraphe \texttt{\textbackslash old} en Section~2.3 discutant le comportement
+    marginal de $\beta$ et $\mu$ avec $M$ est remplacé par l'analyse $M\to\infty$ formelle.
+    Recommandation par défaut~: accepter sa suppression.
+    \item La légende \texttt{\textbackslash old} de Figure~\ref{fig:os} est strictement plus
+    courte et moins informative que le remplacement \texttt{\textbackslash new}. Recommandation
+    par défaut~: accepter la nouvelle légende.
+    \item Les versions \texttt{\textbackslash old} en $\varepsilon$ des Figures~4 et~6
+    (paragraphes et légendes) ne sont gardées que pour la traçabilité. Elles sont strictement
+    remplacées par les versions $\mathrm{SW}_2$, qui répondent directement au point des
+    rapporteurs JASA sur les métriques de qualité postérieure et qui sont appuyées par les
+    références listées en Section~\ref{sec:news_fig_and_sw2}. Recommandation par défaut~:
+    accepter les nouvelles versions~; déplacer les figures $\varepsilon$ en appendice comme déjà
+    fait pour le récit.
+    \item Les phrases \texttt{\textbackslash new} de l'abstract et de la conclusion doivent
+    rester et être dé-surlignées avant soumission.
+    \item L'enveloppement en gros d'un \texttt{\textbackslash new} autour de l'appendice
+    asymptotique est un placeholder~: une fois le contenu validé par les co-auteurs,
+    l'enveloppement devrait être retiré pour que l'appendice se lise comme du matériel ordinaire.
+\end{itemize}
+\fi
 
 \end{document}
-

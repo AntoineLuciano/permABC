@@ -468,9 +468,9 @@ In this appendix, we complement the results presented in Sections~\ref{sec:gauss
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[scale=.5]{fig/fig4_sw2_time_seed_43.pdf}
+    \includegraphics[width=\textwidth]{fig/fig4_sw2_time_seed_45.pdf}
     \caption{
-        \new{Comparison of standard ABC methods and permutation-based variants on the Gaussian toy model, in terms of the sliced Wasserstein-2 distance to the reference posterior versus wall-clock time. The \( x \)-axis shows the total runtime per 1{,}000 unique accepted particles (log-scale), and the \( y \)-axis represents \( \mathrm{SW}_{2} \) (log-scale). Permutation-based methods consistently outperform standard ABC in terms of both accuracy and computational cost.}
+        \new{Comparison of standard ABC methods and permutation-based variants on the Gaussian toy model (\( K=20 \), no outliers, \( N_{\mathrm{particles}} = 5{,}000 \)), in terms of the sliced Wasserstein-2 distance to the reference posterior versus wall-clock time. The \( x \)-axis shows the total runtime per 1{,}000 unique accepted particles (log-scale), and the \( y \)-axis represents \( \mathrm{SW}_{2} \) (log-scale). Permutation-based methods consistently outperform standard ABC in terms of both accuracy and computational cost.}
     }
     \label{fig:appendix_time_gaussian}
 \end{figure}
@@ -479,9 +479,9 @@ In this appendix, we complement the results presented in Sections~\ref{sec:gauss
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[scale=.5]{fig/fig6_sw2_nsim_seed_43.pdf}
+    \includegraphics[width=\textwidth]{fig/fig6_sw2_nsim_seed_45.pdf}
     \caption{
-        \new{Complementary comparison of ABC methods in terms of simulation count for the outlier-robustness scenario. The \( x \)-axis shows the total number of simulations per 1{,}000 unique accepted particles (log-scale), and the \( y \)-axis represents the sliced Wasserstein-2 distance to the reference posterior (log-scale). Over-Sampling and Under-Matching improve sampling efficiency while maintaining robustness to model misspecification.}
+        \new{Complementary comparison of ABC methods in terms of simulation count for the outlier-robustness scenario (\( K=20 \), 4 outliers, \( N_{\mathrm{particles}} = 5{,}000 \)). The \( x \)-axis shows the total number of simulations per 1{,}000 unique accepted particles (log-scale), and the \( y \)-axis represents the sliced Wasserstein-2 distance to the reference posterior (log-scale). Over-Sampling and Under-Matching improve sampling efficiency while maintaining robustness to model misspecification.}
     }
     \label{fig:appendix_simcount}
 \end{figure}

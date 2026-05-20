@@ -1,0 +1,321 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\definecolor{done}{HTML}{2E7D32}
+\definecolor{todo}{HTML}{C62828}
+\definecolor{partial}{HTML}{E65100}
+\definecolor{mech}{HTML}{1565C0}
+
+\newcommand{\done}{\textcolor{done}{\textbf{FAIT}}}
+\newcommand{\todo}{\textcolor{todo}{\textbf{A FAIRE}}}
+\newcommand{\parti}{\textcolor{partial}{\textbf{PARTIEL}}}
+\newcommand{\mech}{\textcolor{mech}{\textbf{MECANIQUE}}}
+
+\title{Plan de route avant soumission JASA\\[6pt]
+\large\textit{Permutations Accelerate Approximate Bayesian Computation}}
+\author{Memo interne --- 21 avril 2026}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+%% ============================================================
+\section{Etat des lieux}
+%% ============================================================
+
+Le papier est a 35 pages (limite JASA), format JASA (12pt, double-spaced, \texttt{agsm.bst}, toggle \verb|\anon|). L'appendice est dans \texttt{supplement.tex} (19 pages). Les changements depuis la version Biometrika sont marques avec \verb|\old{}|/\verb|\new{}| pour relecture par Robin et Xian.
+
+\subsection{Ce qui est fait}
+
+\begin{itemize}[nosep]
+    \item JASA formatting complet (marges, police, double-spacing, bibliographie)
+    \item 35 pages atteintes (reductions : condensation OS, UM, kernels, SIR, ABC-Gibbs, Section 1 ; Fig 7+8 fusionnees ; Algorithm en \verb|\small|)
+    \item \texttt{supplement.tex} separe avec numerotation S.1--S.8
+    \item SW$_2$ comme metrique de qualite posterieure (remplace $\varepsilon$-vs-cost) --- repond au \textbf{Mock M1}
+    \item ABC-SMC standard (sans permutations) ajoute dans les benchmarks --- repond au \textbf{Mock M2}
+    \item $K\to\infty$ asymptotics integres (Proposition 1.5) --- repond partiellement au \textbf{Mock M4}
+    \item $M\to\infty$ derivation deplacee en appendice S.4.1 --- repond partiellement au \textbf{Mock M4}
+    \item SIR stochasticite : formule log-normal $\sigma=0.05$ documentee
+    \item WABC discussion textuelle (Section 1.2, lien Wasserstein)
+    \item Validation SIR synthetique : script + SBATCH + figure + texte appendice --- \textbf{code pret, pas encore execute}
+    \item \texttt{jasa\_guidelines.md} cree avec toutes les consignes JASA
+\end{itemize}
+
+%% ============================================================
+\section{Priorite 1 --- Bloquant pour la soumission}
+%% ============================================================
+
+\subsection{Lancer le job SIR synthetique (5 min)}
+\label{sec:sir_synth}
+
+\textbf{Statut :} \mech{} --- le code est pret, il suffit de push + submit.
+
+\textbf{Quoi :} Le script \texttt{run\_sir\_synthetic\_validation.py} genere des donnees SIR avec parametres connus ($K=10$, 120 jours), lance permABC-SMC pour $\sigma \in \{0.01, 0.05, 0.10\}$, et sauve les resultats. Le script de figure \texttt{fig\_sir\_synthetic\_validation.py} produit le PDF pour l'appendice (Section S.8.2).
+
+\textbf{Commandes :}
+\begin{verbatim}
+git add -A && git commit -m "Add SIR synthetic validation"
+git push origin main
+ssh ceremade-cluster "cd ~/permABC && git pull origin main"
+ssh ceremade-cluster "cd ~/permABC && sbatch \
+    experiments/scripts/cluster/run_sir_synthetic.SBATCH"
+\end{verbatim}
+
+\textbf{Apres execution :} recuperer les pickles, lancer le script figure, copier le PDF dans \texttt{paper/fig/}.
+
+\textbf{Pourquoi c'est bloquant :} C'est le reproche le plus grave des reviewers (Referee 1 Biometrika, Mock M5). Sans validation sur donnees synthetiques, impossible de distinguer si permABC produit une bonne approximation d'un mauvais modele ou une mauvaise approximation.
+
+\subsection{Hardcoder les references vers le supplement (15 min)}
+\label{sec:refs}
+
+\textbf{Statut :} \mech{} --- remplacement mecanique.
+
+\textbf{Quoi :} Le papier principal contient 14 \verb|\ref{appendix_...}| qui pointent vers des labels definis dans \texttt{supplement.tex}. Comme les deux documents sont compiles separement, LaTeX affiche ``\textbf{??}'' dans le PDF. Il faut remplacer chaque reference par le texte en dur.
+
+\textbf{Table de correspondance :}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Label} & \textbf{Remplacement} \\
+\midrule
+\verb|Appendix~\ref{appendix_proofs}| & Supplement, Section~S.3 \\
+\verb|Appendix~\ref{sec:appendix_strat}| & Supplement, Section~S.2 \\
+\verb|Appendix~\ref{appendix_os}| & Supplement, Section~S.4 \\
+\verb|Appendix~\ref{appendix_os_asymptotics}| & Supplement, Section~S.4.1 \\
+\verb|Appendix~\ref{appendix_um}| & Supplement, Section~S.5 \\
+\verb|Appendix~\ref{appendix_kernel}| & Supplement, Section~S.6 \\
+\verb|Appendix~\ref{sec:appendix_comparison}| & Supplement, Section~S.7 \\
+\verb|Appendix~\ref{appendix_sir_validation}| & Supplement, Section~S.8.1 \\
+\verb|Appendix~\ref{appendix_sir_synthetic}| & Supplement, Section~S.8.2 \\
+\verb|Appendix~\ref{appendix_sir}| & Supplement, Section~S.8 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Attention :} si on ajoute/supprime des sections dans le supplement, les numeros changent. Faire ce remplacement en dernier, juste avant soumission.
+
+\subsection{Theorem 1 : attenuer et etendre aux ties (1--2h, theorie)}
+\label{sec:thm1}
+
+\textbf{Statut :} \todo{} --- necessite reflexion mathematique.
+
+\textbf{Sous-probleme A : attenuer les claims.} La phrase actuelle (Section 1.4) dit :
+\begin{quote}
+``the efficiency gains provided by permABC come \emph{at no cost to theoretical consistency}''
+\end{quote}
+C'est vrai uniquement quand $\varepsilon \to 0$. Pour tout $\varepsilon$ fini utilise en pratique, les deux pseudo-posteriors (permABC vs ABC standard) peuvent differer, sans borne connue sur l'ecart. Le mock review M3 demande explicitement : soit fournir une borne en TV ou $W_2$ pour $\varepsilon$ fini, soit attenuer.
+
+\textbf{Proposition :} Remplacer par quelque chose comme :
+\begin{quote}
+``In the small-tolerance regime $\varepsilon < \varepsilon^*$, permABC and standard ABC produce identical posteriors (Theorem~1). For larger $\varepsilon$, the two pseudo-posteriors may differ; bounding this discrepancy at finite $\varepsilon$ remains an open problem.''
+\end{quote}
+
+\textbf{Sous-probleme B : etendre au cas des ties.} L'editeur de Biometrika a explicitement demande : que se passe-t-il si deux compartiments ont des donnees tres proches ? Dans ce cas $\varepsilon^*$ est tres petit et le regime $\varepsilon < \varepsilon^*$ est inaccessible.
+
+L'idee suggeree par l'editeur : redefinir $\varepsilon^*$ comme la moitie de la distance minimale entre observations \emph{distinctes}. Alors le cardinal des permutations acceptees est constant (egal au nombre de permutations qui echangent les compartiments identiques), et Theorem~1 tient toujours avec un reweighting. La preuve est une extension mineure de Lemma~1.
+
+\textbf{Qui :} Antoine + Robin/Xian (la preuve est mathematique).
+
+\subsection{Formaliser les resultats $M\to\infty$ comme Propositions (1h)}
+\label{sec:minfty}
+
+\textbf{Statut :} \parti{} --- le contenu mathematique est en appendice S.4.1, mais sous forme d'equations numerotees sans enonce formel.
+
+\textbf{Quoi :} Le mock review M4 demande des Propositions avec hypotheses explicites. Concretement :
+\begin{enumerate}[nosep]
+    \item Enoncer les ``mild regularity assumptions on $d$'' (continuite, compacite du support, etc.)
+    \item Envelopper la convergence $d_M \to \delta_\beta$ a.s. dans une \textbf{Proposition} numerotee
+    \item Envelopper le resultat \eqref{eq:os\_pushforward\_limit} (dans le main text) dans une \textbf{Proposition} numerotee, avec renvoi a l'appendice pour la preuve
+    \item Ajouter un court paragraphe de preuve (ou ``proof sketch'') en appendice
+\end{enumerate}
+
+\textbf{Alternative :} Si on ne veut pas formaliser completement, etiqueter clairement comme ``heuristic'' ou ``conjectural'' avec un pointer vers un traitement rigoureux futur. Le mock review accepte cette option.
+
+\subsection{Benchmark WABC / Hilbert / Sinkhorn vs LSA (code + cluster)}
+\label{sec:wabc}
+
+\textbf{Statut :} \todo{} --- necessite code + execution.
+
+\textbf{Quoi :} Sur le Gaussian toy model ($K=20$, posterieure en forme close), comparer :
+\begin{itemize}[nosep]
+    \item permABC avec LSA exact ($\mathcal{O}(K^3)$)
+    \item permABC avec Hilbert sorting ($\mathcal{O}(K\log K)$)
+    \item permABC avec Sinkhorn ($\mathcal{O}(K^2 \times \text{iters})$)
+    \item permABC avec warm-started swaps ($\mathcal{O}(K^2)$ amorti)
+\end{itemize}
+
+Metriques : SW$_2$ a la posterieure de reference, runtime, fraction d'iterations ou la permutation retournee coincide avec l'optimum exact.
+
+\textbf{Pourquoi :} Mock M6 + Referee 3 (points 1 et 8). Le code des solvers existe deja dans \texttt{permabc/assignment/solvers/}. Il faut creer un script de benchmark et un SBATCH.
+
+\textbf{Ou dans le papier :} Nouvelle figure en appendice (Section S.7 ou nouvelle section), avec une phrase dans le main text qui y renvoie.
+
+\subsection{Resoudre les \texttt{\textbackslash old\{\}}/\texttt{\textbackslash new\{\}} (30 min, apres review Robin/Xian)}
+\label{sec:oldnew}
+
+\textbf{Statut :} \todo{} --- intentionnellement repousse.
+
+\textbf{Quoi :} Envoyer le PDF actuel a Robin et Xian pour qu'ils valident les changements (bleu = nouveau, rouge barre = ancien). Une fois valide :
+\begin{enumerate}[nosep]
+    \item Accepter chaque \verb|\new{...}| : retirer le markup, garder le texte
+    \item Supprimer chaque \verb|\old{...}| : retirer le bloc entier
+    \item Retirer le \verb|\renewcommand{\old}[1]{}| dans \texttt{resubmission.tex}
+    \item Verifier que le page count reste $\leq 35$
+\end{enumerate}
+
+%% ============================================================
+\section{Priorite 2 --- Forte valeur ajoutee}
+%% ============================================================
+
+\subsection{Texte introductif Section 2 (10 min) \done}
+
+Mock m1 : la Section 2 saute directement de \verb|\section{Sequential...}| a \verb|\subsection{State of the art}|. Ajouter un paragraphe chapeau de 3--4 lignes presentant les trois strategies (permABC-SMC, Over-Sampling, Under-Matching) et le plan de la section. \textit{Fait : paragraphe chapeau ajoute en tete de \texttt{2\_sequential.tex} avec renvois aux sous-sections.}
+
+\subsection{Specifier les hyperparametres du Gaussian toy (10 min) \done}
+
+Mock m2/m9 : donner explicitement $(a, b, s, n, K)$ dans le texte de la Section 3.2 ou en legende de figure. Les valeurs sont dans le code (\texttt{run\_performance\_comparison.py}). \textit{Fait : $a=b=5$, $s=10$, $n=10$, $K=20$ ajoutes apres l'equation dans Section 3.2.}
+
+\subsection{Discuter Figure 2 a la lumiere de $M\to\infty$ (15 min)}
+
+Mock m3 : la figure est la mais le texte ne pointe pas explicitement le comportement prior-like de $\beta$ pour grand $M$ ni la concentration des locaux. Ajouter 2--3 phrases dans le paragraphe qui entoure la figure.
+
+\subsection{Comparaison equilibree ABC-Gibbs (discussion)}
+
+Mock m4 : la comparaison actuelle utilise un modele adversarial. Ajouter une phrase reconnaissant que ABC-Gibbs marche bien quand les dependances sont faibles, ou ajouter un petit benchmark supplementaire.
+
+\subsection{Disambiguer la notation $M$ (10 min) \done}
+
+Mock m6 : Section 2.1 utilise $M$ pour le nombre de datasets par parametre (Bornn et al.), Section 2.3 utilise $M$ pour le nombre de compartiments simules. Renommer l'un des deux (par ex. $M_{\text{sim}}$ dans 2.1 ou garder $M$ seulement pour OS). \textit{Fait : renomme en $M_{\mathrm{rep}}$ dans 2.1 (3 occurrences \texttt{\textbackslash old\{\}} + 1 \texttt{\textbackslash new\{\}}). $M$ reserve a l'Over-Sampling.}
+
+\subsection{Unique particle rate : utiliser ou supprimer (10 min)}
+
+Mock m7 : cette metrique est introduite dans la Section 2.1 mais jamais reportee dans aucune experience. Deux options :
+\begin{itemize}[nosep]
+    \item La reporter dans au moins une figure (elle est deja calculee dans le code)
+    \item Supprimer la discussion (2 phrases)
+\end{itemize}
+
+\subsection{Benchmark cout computationnel assignment (code + cluster)}
+
+Mock m8 : pour $K=94$ (SIR), quelle fraction du runtime est dans l'assignment vs. la simulation ? Et quantifier le gain warm-swap vs. LSA complet. Cela renforce la Section 2.3 sur les swaps warm-started.
+
+\subsection{Discussion LFI elargie (30 min)}
+
+Mock M8 + Referee 2 : le paysage LFI actuel inclut SNPE/SNLE (normalizing flows), SBI, methodes bayesiennes generalisees. Le papier ne les mentionne pas. Ajouter un paragraphe dans la conclusion ou l'introduction positionnant permABC :
+\begin{itemize}[nosep]
+    \item permABC est complementaire : il exploite la structure echangeable, ce que les methodes NN ne font pas nativement
+    \item Les methodes amortised (SNPE) sont plus adaptees quand on veut faire de l'inference repetee sur des donnees de meme structure
+    \item permABC est plus simple a implementer et ne necessite pas d'entrainement
+\end{itemize}
+
+\subsection{Mettre a jour abstract et conclusion (20 min)}
+
+L'abstract et la conclusion ne mentionnent pas :
+\begin{itemize}[nosep]
+    \item SW$_2$ comme metrique (au lieu de $\varepsilon$)
+    \item Le lien formel avec WABC
+    \item Les resultats asymptotiques ($K\to\infty$, $M\to\infty$)
+    \item La validation SIR synthetique
+    \item Les warm-started swaps ($\mathcal{O}(K^2)$ amorti)
+\end{itemize}
+
+%% ============================================================
+\section{Priorite 3 --- Preparation soumission}
+%% ============================================================
+
+\subsection{Cover letter}
+
+JASA exige une cover letter detaillant la significance du travail. Points a couvrir :
+\begin{itemize}[nosep]
+    \item Motivation : ABC pour modeles hierarchiques echangeables
+    \item Contribution : permABC + OS/UM + theorie + SIR 94 departements
+    \item Section ciblee : Theory and Methods
+    \item Le papier a ete soumis puis rejete par Biometrika ; mentionner que les commentaires des reviewers ont ete integres (sans entrer dans les details)
+    \item Pas de conflit d'interet
+\end{itemize}
+
+\subsection{Version anonyme}
+
+JASA est double-anonymous. Il faut :
+\begin{itemize}[nosep]
+    \item Mettre \verb|\anon| a 0 dans \texttt{resubmission.tex}
+    \item Verifier qu'aucun nom/affiliation/funding n'apparait dans le PDF
+    \item Verifier le supplement aussi
+    \item Retirer ou anonymiser les references a ``notre package Python'' et l'URL GitHub
+    \item Retirer les commentaires \verb|\al{}|, \verb|\rr{}|, \verb|\xian{}|
+\end{itemize}
+
+\subsection{Author Contributions Checklist (ACC)}
+
+Depuis septembre 2021, JASA exige un formulaire ACC pour T\&M. A remplir lors de la revision (pas necessaire pour la soumission initiale, mais preparer le terrain) :
+\begin{itemize}[nosep]
+    \item Code disponible : oui (GitHub)
+    \item Donnees disponibles : oui (Sante publique France, open data)
+    \item Instructions de reproduction : oui (\texttt{README.md})
+\end{itemize}
+
+\subsection{Reproducibility materials}
+
+Preparer un zip \texttt{reproducibility\_materials.zip} contenant :
+\begin{itemize}[nosep]
+    \item Le package \texttt{permabc/} + \texttt{requirements.txt} + \texttt{setup.py}
+    \item Les scripts de figures (\texttt{experiments/scripts/figures/})
+    \item Les donnees COVID (\texttt{experiments/data/})
+    \item Un \texttt{README} expliquant comment reproduire chaque figure
+\end{itemize}
+
+\subsection{Verifications finales}
+
+\begin{itemize}[nosep]
+    \item Abstract $\leq$ 200 mots, pas de references dans l'abstract
+    \item Keywords (3--6) pas dans le titre : OK actuellement
+    \item Captions sans reference aux couleurs (``dashed'' au lieu de ``blue'')
+    \item Toutes les figures dans le corps du texte (pas a la fin)
+    \item Pages numerotees
+    \item Pas de footnotes avec des maths
+\end{itemize}
+
+%% ============================================================
+\section{Ordre d'execution recommande}
+%% ============================================================
+
+\subsection*{Etape A --- Immediate (cette semaine)}
+\begin{enumerate}[nosep]
+    \item Lancer le job SIR synthetique sur le cluster (\S\ref{sec:sir_synth})
+    \item Envoyer le PDF a Robin et Xian pour validation des \verb|\old|/\verb|\new|
+    \item Hardcoder les references supplement (\S\ref{sec:refs})
+    \item Redaction rapide : intro Section 2, hyperparametres Gaussian, notation $M$, unique particle rate, abstract/conclusion
+\end{enumerate}
+
+\subsection*{Etape B --- Theorie (1--2 semaines)}
+\begin{enumerate}[nosep]
+    \item Attenuer Theorem 1 + etendre aux ties (\S\ref{sec:thm1}) --- avec Robin/Xian
+    \item Formaliser Propositions $M\to\infty$ (\S\ref{sec:minfty})
+\end{enumerate}
+
+\subsection*{Etape C --- Numerique (en parallele de B)}
+\begin{enumerate}[nosep]
+    \item Recuperer resultats SIR synthetique, generer la figure
+    \item Creer et lancer le benchmark WABC/Hilbert/Sinkhorn (\S\ref{sec:wabc})
+    \item Benchmark cout assignment $K=94$
+\end{enumerate}
+
+\subsection*{Etape D --- Finalisation}
+\begin{enumerate}[nosep]
+    \item Integrer les retours de Robin/Xian, resoudre \verb|\old|/\verb|\new| (\S\ref{sec:oldnew})
+    \item Discussion LFI elargie + ABC-Gibbs equilibre
+    \item Cover letter, anonymisation, verifications finales
+    \item Soumission
+\end{enumerate}
+
+\end{document}

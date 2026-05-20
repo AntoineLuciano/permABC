@@ -29,7 +29,7 @@ from .distances import (
 from .dispatch import do_swap, do_hilbert, do_hilbert_solve
 
 # Individual solvers
-from .solvers.lsa import solve_lsa, solve_lsa_custom
+from .solvers.lsa import solve_lsa
 from .solvers.sinkhorn import sinkhorn_assignment
 
 __all__ = [
@@ -42,6 +42,5 @@ __all__ = [
     "do_hilbert",
     "do_hilbert_solve",
     "solve_lsa",
-    "solve_lsa_custom",
     "sinkhorn_assignment",
 ]

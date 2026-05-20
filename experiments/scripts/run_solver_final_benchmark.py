@@ -40,7 +40,7 @@ from permabc.utils.functions import Theta
 from permabc.assignment.dispatch import (
     _build_cost_and_global, last_smart_stats,
 )
-from permabc.assignment.solvers.lsa import solve_lsa, solve_lsa_custom, _HAS_CUSTOM_LSA
+from permabc.assignment.solvers.lsa import solve_lsa
 from permabc.assignment.solvers.sinkhorn import sinkhorn_assignment
 from permabc.assignment.solvers.swap import do_swap, _HAS_NUMBA
 from permabc.assignment.solvers.hilbert import _HAS_CGAL
@@ -60,8 +60,6 @@ from diagnostics import (
 
 MICRO_METHODS = [
     "LSA (scipy)",
-    "LSA custom cold",
-    "LSA custom warm",
     "Hilbert",
     "Hilbert+Swap",
     "Sinkhorn",
@@ -77,18 +75,6 @@ def run_micro_single(method, local_mats, global_d, model, zs, y_obs, K,
 
     if method == "LSA (scipy)":
         ys, zs_idx = solve_lsa(local_mats, parallel=True)
-        dists = compute_total_distance(zs_idx, ys, local_mats, global_d)
-
-    elif method == "LSA custom cold":
-        if not _HAS_CUSTOM_LSA:
-            return np.nan, np.nan, np.nan
-        ys, zs_idx = solve_lsa_custom(local_mats, init_col4row=None, parallel=True)
-        dists = compute_total_distance(zs_idx, ys, local_mats, global_d)
-
-    elif method == "LSA custom warm":
-        if not _HAS_CUSTOM_LSA:
-            return np.nan, np.nan, np.nan
-        ys, zs_idx = solve_lsa_custom(local_mats, init_col4row=zs_lsa, parallel=True)
         dists = compute_total_distance(zs_idx, ys, local_mats, global_d)
 
     elif method == "Hilbert":
@@ -451,7 +437,7 @@ def main():
         _PROJECT_ROOT / "experiments" / "results" / "solver_final_benchmark")
     os.makedirs(out_dir, exist_ok=True)
 
-    print(f"Numba: {_HAS_NUMBA}  |  CGAL: {_HAS_CGAL}  |  Custom LSA: {_HAS_CUSTOM_LSA}")
+    print(f"Numba: {_HAS_NUMBA}  |  CGAL: {_HAS_CGAL}")
     print(f"K: {args.K}  |  n_obs: {args.n_obs}  |  seed={args.seed}")
     print(f"Output: {out_dir}\n")
 

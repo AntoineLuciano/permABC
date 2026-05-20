@@ -12,7 +12,19 @@
       "Bash(PYENV_VERSION=permabc pyenv exec python experiments/scripts/figures/fig10_outlier_influence.py --K 20 --seed 42 --osum 2>&1)",
       "Bash(PYENV_VERSION=permabc pyenv exec pytest tests/ -p no:cov -v)",
       "Bash(PYENV_VERSION=permabc pyenv exec python -c \"from permabc.core.distances import optimal_index_distance, do_swap, _HAS_NUMBA, _HAS_CGAL; print\\('OK'\\)\")",
-      "Bash(ssh ceremade-cluster:*)"
+      "Bash(ssh ceremade-cluster:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(PYENV_VERSION=permabc pyenv exec:*)",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error resubmission.tex)",
+      "Bash(scp ceremade-cluster:~/permABC/experiments/figures/fig4/fig4_nsim_seed_43.pdf experiments/figures/fig4/)",
+      "Bash(scp ceremade-cluster:~/permABC/experiments/figures/fig4/fig4_time_seed_43.pdf experiments/figures/fig4/)",
+      "Bash(scp ceremade-cluster:~/permABC/experiments/figures/fig6/fig6_nsim_seed_43.pdf experiments/figures/fig6/)",
+      "Bash(scp ceremade-cluster:~/permABC/experiments/figures/fig6/fig6_time_seed_43.pdf experiments/figures/fig6/)",
+      "Bash(scp:*)",
+      "Bash(pdflatex -interaction=nonstopmode resubmission.tex)",
+      "Bash(open:*)"
     ]
   }
 }
